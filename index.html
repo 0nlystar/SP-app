@@ -3,94 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debt Cloud Pro - New Layout</title>
+    <title>Debt Cloud - Fixed Hybrid</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
         .page-section { display: none; }
-        .page-section.active { display: block; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #94a3b8; }
-        .nav-item.active { color: #10b981; }
-        .tab-btn { transition: 0.2s; border-bottom: 3px solid transparent; }
-        .tab-btn.active { border-color: #10b981; color: #10b981; font-weight: bold; }
-        .report-pending { background-color: #fffbeb !important; border-left: 5px solid #f59e0b !important; }
-        /* สไตล์หลอดสถานะใหม่ */
-        .progress-container { position: relative; width: 100%; height: 24px; background: #f1f5f9; border-radius: 12px; overflow: hidden; }
-        .progress-bar { height: 100%; background: #10b981; transition: width 0.5s ease; }
-        .progress-text { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: bold; color: #1e293b; mix-blend-mode: multiply; }
+        .page-section.active { display: block; }
+        .progress-box { position: relative; width: 100%; height: 26px; background: #f1f5f9; border-radius: 99px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .progress-fill { height: 100%; background: #10b981; transition: width 0.6s ease; }
+        .progress-text { position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 10px; font-weight: 800; color: #1e293b; mix-blend-mode: multiply; }
+        .report-pending { border-left: 6px solid #f59e0b !important; background-color: #fffbeb !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-32">
 
-    <div class="sticky top-0 bg-white/90 backdrop-blur-md border-b z-40 p-4 flex justify-between items-center shadow-sm">
-        <div>
-            <h1 class="font-bold text-slate-800 text-lg" id="currentTitle">สรุปยอดเงิน</h1>
-            <p id="userStatus" class="text-[10px] font-bold text-emerald-500 uppercase">โหมดผู้เข้าชม</p>
+    <header class="sticky top-0 bg-white border-b z-40 p-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white text-sm">💰</div>
+            <h1 class="font-bold text-slate-800" id="currentTitle">สรุปยอดเงิน</h1>
         </div>
         <div class="flex gap-1">
-            <button onclick="generatePDF('shopee')" class="bg-orange-50 text-orange-600 px-3 py-2 rounded-xl text-[10px] font-bold border border-orange-100">PDF Shopee</button>
-            <button onclick="generatePDF('loan')" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-xl text-[10px] font-bold border border-blue-100">PDF เงินกู้</button>
-            <button onclick="loginAdmin()" id="adminLock" class="bg-white border p-2 rounded-xl ml-1">🔒</button>
+            <button onclick="generatePDF('shopee')" class="bg-orange-50 text-orange-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-orange-100">PDF Shopee</button>
+            <button onclick="generatePDF('loan')" class="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-[10px] font-bold border border-blue-100">PDF เงินกู้</button>
+            <button onclick="loginAdmin()" id="adminLock" class="bg-slate-100 p-2 rounded-lg ml-1">🔒</button>
         </div>
-    </div>
+    </header>
 
-    <section id="page-home" class="page-section active p-4">
-        <div class="bg-emerald-500 rounded-[2.5rem] p-8 text-white shadow-lg mb-6 text-center">
-            <p class="opacity-80 text-xs font-bold uppercase mb-1">ยอดต้องเก็บเดือนนี้</p>
-            <div id="totalMonthlyAmount" class="text-4xl font-black italic">฿0</div>
-        </div>
-        <div id="monthlySummaryArea" class="space-y-3"></div>
-    </section>
+    <main class="max-w-2xl mx-auto p-4">
+        <section id="page-home" class="page-section active">
+            <div class="bg-slate-900 rounded-[2rem] p-8 text-white shadow-xl mb-6 text-center border-b-4 border-emerald-500">
+                <p class="opacity-60 text-[10px] font-bold uppercase mb-1 tracking-widest">ยอดรวมต้องเก็บเดือนนี้</p>
+                <div id="totalMonthlyAmount" class="text-4xl font-black italic">฿0</div>
+            </div>
+            <div id="monthlySummaryArea" class="space-y-3">
+                </div>
+        </section>
 
-    <section id="page-active" class="page-section p-4">
-        <div id="adminPanel" class="hidden mb-6 bg-slate-900 text-white p-6 rounded-[2rem]">
-             <div id="nameTagsArea" class="flex flex-wrap gap-2 mb-4"></div>
-             <div class="space-y-3">
-                 <input type="text" id="debtorName" placeholder="ชื่อ" class="w-full p-3 rounded-xl text-slate-800 outline-none">
-                 <input type="text" id="itemName" placeholder="รายการ" class="w-full p-3 rounded-xl text-slate-800 outline-none">
-                 <div class="flex gap-2">
-                    <select id="category" class="w-24 p-3 rounded-xl text-slate-800 outline-none"><option value="shopee">Shopee</option><option value="loan">เงินกู้</option></select>
-                    <input type="number" id="defaultAmount" placeholder="ยอด/งวด" class="flex-1 p-3 rounded-xl text-slate-800 outline-none font-bold">
-                    <select id="totalMonths" class="w-20 p-3 rounded-xl text-slate-800 outline-none"><option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="12" selected>12</option></select>
-                 </div>
-                 <button onclick="addItem()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl">บันทึกข้อมูล</button>
-             </div>
-        </div>
+        <section id="page-active" class="page-section">
+            <div id="adminPanel" class="hidden mb-6 bg-white p-6 rounded-[2rem] shadow-md border">
+                <div id="nameTagsArea" class="flex flex-wrap gap-2 mb-4"></div>
+                <div class="space-y-3">
+                    <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="w-full p-3 bg-slate-50 rounded-xl outline-none">
+                    <input type="text" id="itemName" placeholder="รายการ" class="w-full p-3 bg-slate-50 rounded-xl outline-none">
+                    <div class="flex gap-2">
+                        <select id="category" class="flex-1 p-3 bg-slate-50 rounded-xl font-bold">
+                            <option value="shopee">Shopee</option>
+                            <option value="loan">เงินกู้</option>
+                        </select>
+                        <input type="number" id="defaultAmount" placeholder="ยอด/งวด" class="flex-1 p-3 bg-slate-50 rounded-xl font-bold text-center">
+                        <select id="totalMonths" class="w-20 p-3 bg-slate-50 rounded-xl font-bold">
+                            <option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="12" selected>12</option>
+                        </select>
+                    </div>
+                    <button onclick="addItem()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">บันทึกลง Cloud</button>
+                </div>
+            </div>
 
-        <div class="flex bg-white rounded-2xl p-1 shadow-sm border mb-4">
-            <button onclick="switchTab('shopee')" id="tab-shopee" class="tab-btn active flex-1 py-3 text-xs font-bold rounded-xl">🛒 SHOPEE</button>
-            <button onclick="switchTab('loan')" id="tab-loan" class="tab-btn flex-1 py-3 text-xs font-bold rounded-xl">💵 เงินกู้</button>
-        </div>
+            <div class="flex bg-white rounded-xl p-1 shadow-sm border mb-4">
+                <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-xs font-bold rounded-lg transition-all bg-emerald-500 text-white">SHOPEE</button>
+                <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-xs font-bold rounded-lg transition-all">เงินกู้</button>
+            </div>
 
-        <div id="payAllBtnArea" class="hidden mb-4">
-            <button onclick="payAllNextMonth()" class="w-full bg-white border-2 border-emerald-500 text-emerald-600 font-bold py-3 rounded-2xl">✅ จ่ายทุกคนในหน้านี้ (+1 งวด)</button>
-        </div>
+            <div id="activeListContent" class="space-y-6"></div>
+        </section>
 
-        <div id="activeListContent" class="space-y-6"></div>
-    </section>
+        <section id="page-history" class="page-section">
+            <div id="historyList" class="space-y-2"></div>
+        </section>
+    </main>
 
-    <section id="page-history" class="page-section p-4"><div id="historyList" class="space-y-2"></div></section>
-
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 border-t flex h-24 pb-6 z-50">
-        <button onclick="switchPage('home', 'สรุปยอดเงิน')" class="nav-item active" id="nav-home"><span class="text-2xl">🏠</span><span>สรุป</span></button>
-        <button onclick="switchPage('active', 'รายการค้าง')" class="nav-item" id="nav-active"><span class="text-2xl">📝</span><span>รายการ</span></button>
-        <button onclick="switchPage('history', 'จบการผ่อน')" class="nav-item" id="nav-history"><span class="text-2xl">✅</span><span>ประวัติ</span></button>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex h-20 pb-4 z-50">
+        <button onclick="switchPage('home', 'สรุปยอดเงิน')" class="flex-1 flex flex-col items-center justify-center text-emerald-500" id="nav-home">
+            <span class="text-xl">🏠</span><span class="text-[10px] font-bold">สรุป</span>
+        </button>
+        <button onclick="switchPage('active', 'รายการค้าง')" class="flex-1 flex flex-col items-center justify-center text-slate-400" id="nav-active">
+            <span class="text-xl">📝</span><span class="text-[10px] font-bold">รายการ</span>
+        </button>
+        <button onclick="switchPage('history', 'จบการผ่อน')" class="flex-1 flex flex-col items-center justify-center text-slate-400" id="nav-history">
+            <span class="text-xl">✅</span><span class="text-[10px] font-bold">ประวัติ</span>
+        </button>
     </nav>
 
-    <div id="detailModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[60]">
-        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl scale-100" id="modalContent">
-            <div class="flex justify-between items-start mb-6">
-                <div><h3 id="mDebtor" class="text-2xl font-black text-slate-800"></h3><p id="mItem" class="text-sm text-slate-400 italic"></p></div>
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="mDebtor" class="text-2xl font-black text-slate-800"></h3>
                 <button onclick="closeModal()" class="text-slate-300 text-4xl">&times;</button>
             </div>
-            <div id="monthGrid" class="space-y-2 max-h-[45vh] overflow-y-auto pr-2"></div>
-            <div class="mt-6 p-6 bg-slate-50 rounded-3xl flex justify-between items-center border border-slate-100">
-                <span class="font-bold text-slate-400">จ่ายรวมไปแล้ว:</span><span id="mTotalAmount" class="text-2xl font-black text-emerald-600 italic">฿0</span>
+            <div id="monthGrid" class="space-y-2 max-h-[50vh] overflow-y-auto pr-2"></div>
+            <div class="mt-6 flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
+                <span class="text-slate-400 font-bold">จ่ายรวมแล้ว:</span>
+                <span id="mTotalAmount" class="text-2xl font-black text-emerald-600">฿0</span>
             </div>
-            <button onclick="closeModal()" class="w-full mt-4 bg-slate-900 text-white py-4 rounded-2xl font-bold">ตกลง</button>
+            <button onclick="closeModal()" class="w-full mt-4 bg-slate-900 text-white py-4 rounded-xl font-bold">ปิด</button>
         </div>
     </div>
 
@@ -99,130 +106,207 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuoGoCZ0IisovMTtrJmbwqL4gS_mSIRYiPINPJPCmqCkDLjpm2IfUgDJ4s6ZgGwVHq/exec"; 
         const ADMIN_PASS = "onlystar"; 
-        let items = []; let isAdmin = false; let currentTab = 'shopee';
+        let items = []; 
+        let isAdmin = false; 
+        let currentTab = 'shopee';
 
         async function loadData() {
-            try { const res = await fetch(SCRIPT_URL); const data = await res.json(); items = data || []; render(); } catch (e) {}
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+                items = data || [];
+                render(); 
+            } catch (e) { alert("โหลดข้อมูลไม่สำเร็จ กรุณาเช็กเน็ตครับ"); }
         }
 
         function switchPage(pageId, title) {
             document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(n => n.classList.replace('text-emerald-500', 'text-slate-400'));
             document.getElementById('page-' + pageId).classList.add('active');
-            document.getElementById('nav-' + pageId).classList.add('active');
+            document.getElementById('nav-' + pageId).classList.replace('text-slate-400', 'text-emerald-500');
             document.getElementById('currentTitle').innerText = title;
         }
 
-        function switchTab(tab) { currentTab = tab; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); render(); }
-
-        function render() {
-            const activeContent = document.getElementById('activeListContent');
-            const historyList = document.getElementById('historyList');
-            const summaryArea = document.getElementById('monthlySummaryArea');
-            activeContent.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
-
-            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid));
-            const completedItems = items.filter(i => i.payments.every(p => p.isPaid));
-            const tabItems = activeItems.filter(i => i.cat === currentTab);
-            const groups = tabItems.reduce((acc, item) => { if (!acc[item.debtor]) acc[item.debtor] = []; acc[item.debtor].push(item); return acc; }, {});
-
-            for (const name in groups) {
-                groups[name].sort((a,b) => b.payments.filter(p=>!p.isPaid).length - a.payments.filter(p=>!p.isPaid).length);
-                let groupHtml = `<div class="bg-white rounded-[2rem] p-5 shadow-sm border mb-6"><h3 class="font-black text-slate-800 text-lg border-b pb-3 mb-4 flex justify-between items-center"><span>👤 คุณ${name}</span></h3><div class="space-y-4">`;
-                groups[name].forEach(p => groupHtml += renderCard(p));
-                groupHtml += `</div></div>`;
-                activeContent.innerHTML += groupHtml;
-            }
-
-            completedItems.forEach(p => historyList.innerHTML += renderCard(p));
-            let grandTotal = 0; items.forEach(item => { const next = item.payments.find(m => !m.isPaid); if (next) grandTotal += next.amount; });
-            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
-            renderNameTags();
-            if(isAdmin) document.getElementById('payAllBtnArea').classList.remove('hidden');
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-shopee').className = `flex-1 py-3 text-xs font-bold rounded-lg transition-all ${tab==='shopee'?'bg-emerald-500 text-white':'text-slate-500'}`;
+            document.getElementById('tab-loan').className = `flex-1 py-3 text-xs font-bold rounded-lg transition-all ${tab==='loan'?'bg-emerald-500 text-white':'text-slate-500'}`;
+            render();
         }
 
-        // ⭐ NEW RENDER CARD: แก้ไขการวาง Layout ตามที่นายต้องการ
+        function render() {
+            const activeList = document.getElementById('activeListContent');
+            const historyList = document.getElementById('historyList');
+            const summaryArea = document.getElementById('monthlySummaryArea');
+            
+            activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
+
+            // 1. หน้าสรุป (Dashboard) - รวบรวมยอดรายคนจากทุกหมวด
+            let grandTotal = 0;
+            const summaryData = {};
+
+            items.forEach(item => {
+                const nextPay = item.payments.find(p => !p.isPaid);
+                if (nextPay) {
+                    summaryData[item.debtor] = (summaryData[item.debtor] || 0) + nextPay.amount;
+                    grandTotal += nextPay.amount;
+                }
+            });
+
+            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
+            
+            // แสดงรายชื่อในหน้าสรุป
+            Object.keys(summaryData).forEach(name => {
+                summaryArea.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm flex justify-between items-center">
+                        <span class="font-bold text-slate-600">คุณ${name}</span>
+                        <span class="font-black text-slate-800 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span>
+                    </div>`;
+            });
+
+            // 2. รายการค้าง (แยกตามคนใน Tab)
+            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid) && i.cat === currentTab);
+            const groups = activeItems.reduce((acc, curr) => {
+                if(!acc[curr.debtor]) acc[curr.debtor] = [];
+                acc[curr.debtor].push(curr);
+                return acc;
+            }, {});
+
+            for (const name in groups) {
+                let html = `<div class="bg-white rounded-3xl p-5 border shadow-sm mb-4">
+                    <h3 class="font-black text-slate-800 border-b pb-2 mb-3">👤 คุณ${name}</h3>
+                    <div class="space-y-3">`;
+                groups[name].forEach(p => html += renderCard(p));
+                html += `</div></div>`;
+                activeList.innerHTML += html;
+            }
+
+            // 3. หน้าประวัติ
+            items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
+            
+            renderNameTags();
+        }
+
         function renderCard(p) {
-            const paid = p.payments.filter(m => m.isPaid).length;
-            const percent = Math.round((paid / p.totalMonths) * 100);
+            const paidCount = p.payments.filter(m => m.isPaid).length;
+            const percent = Math.round((paidCount / p.totalMonths) * 100);
             const hasReport = p.payments.some(m => m.reported && !m.isPaid);
-            const isCompleted = paid === p.totalMonths;
 
             return `
-                <div class="flex items-center gap-3 p-3 rounded-2xl border border-slate-50 bg-white shadow-sm transition active:scale-[0.98] ${hasReport && !isCompleted ? 'report-pending' : ''}">
-                    <div onclick="openModal(${p.id})" class="w-1/3 cursor-pointer">
-                        <div class="font-bold text-slate-700 text-xs truncate">${hasReport && !isCompleted ? '🚩 ' : ''}${p.item}</div>
-                        <div class="text-[9px] text-slate-400 font-bold uppercase">${p.cat}</div>
-                    </div>
-
-                    <div onclick="openModal(${p.id})" class="flex-1 cursor-pointer">
-                        <div class="progress-container">
-                            <div class="progress-bar" style="width: ${percent}%"></div>
-                            <div class="progress-text">${percent}% (${paid}/${p.totalMonths})</div>
+                <div class="flex items-center gap-3">
+                    <div onclick="openModal(${p.id})" class="flex-1 flex items-center gap-3 p-3 bg-slate-50 rounded-2xl cursor-pointer ${hasReport ? 'report-pending' : ''}">
+                        <div class="w-1/4 font-bold text-[11px] text-slate-700 truncate">${hasReport ? '🚩 ' : ''}${p.item}</div>
+                        <div class="flex-1">
+                            <div class="progress-box">
+                                <div class="progress-fill" style="width: ${percent}%"></div>
+                                <div class="progress-text">${percent}% (${paidCount}/${p.totalMonths})</div>
+                            </div>
                         </div>
                     </div>
-
                     ${isAdmin ? `
-                    <button onclick="event.stopPropagation(); deleteItem(${p.id})" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-red-50 active:bg-red-100 transition border border-red-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-red-500">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                    </button>
-                    ` : ''}
+                    <button onclick="deleteItem(${p.id})" class="w-10 h-10 flex items-center justify-center border border-red-100 rounded-xl text-red-500 active:bg-red-500 active:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>` : ''}
                 </div>`;
         }
 
         function renderNameTags() {
             const area = document.getElementById('nameTagsArea');
             const names = [...new Set(items.map(i => i.debtor))];
-            area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 shadow-sm active:bg-emerald-500 active:text-white">${n}</div>`).join('');
+            area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold text-slate-500 cursor-pointer">${n}</div>`).join('');
+        }
+
+        function openModal(id) {
+            const p = items.find(x => x.id === id);
+            document.getElementById('mDebtor').innerText = p.debtor;
+            const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
+            let totalPaid = 0;
+
+            p.payments.forEach((m, i) => {
+                if(m.isPaid) totalPaid += m.amount;
+                const statusClass = m.isPaid ? 'bg-emerald-50 border-emerald-200' : (m.reported ? 'bg-amber-50 border-amber-200' : 'bg-slate-50');
+                grid.innerHTML += `
+                    <div class="flex items-center gap-3 p-4 rounded-2xl border ${statusClass}">
+                        <span class="text-[10px] font-bold text-slate-400 w-12 italic">งวด ${i+1}</span>
+                        <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-black text-slate-700 outline-none">
+                        <button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-xl flex items-center justify-center transition ${m.isPaid ? 'bg-emerald-500 text-white' : 'bg-white border text-slate-200'}">
+                            ${m.isPaid ? '✓' : (isAdmin ? '' : 'แจ้ง')}
+                        </button>
+                    </div>`;
+            });
+            document.getElementById('mTotalAmount').innerText = `฿${Math.round(totalPaid).toLocaleString()}`;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        async function togglePay(id, idx) {
+            const p = items.find(x => x.id === id);
+            if (isAdmin) {
+                p.payments[idx].isPaid = !p.payments[idx].isPaid;
+                p.payments[idx].reported = false;
+            } else {
+                p.payments[idx].reported = true;
+                alert("ส่งข้อมูลการชำระให้แอดมินแล้ว 🚩");
+            }
+            openModal(id);
+            render();
+            await saveCloud();
+        }
+
+        function updateAmt(id, idx, val) {
+            items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0;
         }
 
         async function addItem() {
-            if(!isAdmin) return;
-            const name = document.getElementById('debtorName').value; const item = document.getElementById('itemName').value;
-            const amt = document.getElementById('defaultAmount').value; const months = parseInt(document.getElementById('totalMonths').value);
-            if(!name || !item || !amt) return alert("กรอกไม่ครบ");
-            items.push({ id: Date.now(), cat: document.getElementById('category').value, debtor: name, item: item, totalMonths: months, payments: Array.from({length: months}, () => ({isPaid: false, amount: parseFloat(amt), reported: false})) });
+            const name = document.getElementById('debtorName').value;
+            const item = document.getElementById('itemName').value;
+            const amt = document.getElementById('defaultAmount').value;
+            const months = parseInt(document.getElementById('totalMonths').value);
+            if(!name || !item || !amt) return alert("กรอกข้อมูลให้ครบ!");
+
+            items.push({
+                id: Date.now(), cat: document.getElementById('category').value,
+                debtor: name, item: item, totalMonths: months,
+                payments: Array.from({length: months}, () => ({isPaid: false, amount: parseFloat(amt), reported: false}))
+            });
             render(); await saveCloud();
+            document.getElementById('itemName').value = '';
         }
 
-        async function payAllNextMonth() {
-            if(!isAdmin || !confirm(`ยืนยันจ่ายทุกคนใน ${currentTab.toUpperCase()} +1 งวด?`)) return;
-            items.forEach(item => { if(item.cat === currentTab) { const next = item.payments.findIndex(p => !p.isPaid); if(next !== -1) { item.payments[next].isPaid = true; item.payments[next].reported = false; } } });
-            render(); await saveCloud();
-        }
-
-        async function deleteItem(id) { if(confirm("ลบรายการนี้? 🗑️")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
-        function openModal(id) {
-            const p = items.find(x => x.id === id); document.getElementById('mDebtor').innerText = p.debtor; document.getElementById('mItem').innerText = p.item;
-            const grid = document.getElementById('monthGrid'); grid.innerHTML = ''; let sum = 0;
-            document.getElementById('detailModal').classList.remove('hidden');
-            p.payments.forEach((m, i) => { if(m.isPaid) sum += m.amount; const status = m.isPaid ? 'bg-emerald-50' : (m.reported ? 'bg-amber-50' : 'bg-slate-50');
-                grid.innerHTML += `<div class="flex items-center gap-3 p-4 rounded-2xl border ${status}"><span class="text-[10px] w-12 font-bold text-slate-400">งวด ${i+1}</span><input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="items.find(x=>x.id===${p.id}).payments[${i}].amount=parseFloat(this.value)" class="flex-1 bg-transparent text-right font-black text-slate-700 outline-none">
-                <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-10 h-10 rounded-xl flex items-center justify-center transition ${m.isPaid?'bg-emerald-500 text-white':'bg-white text-slate-200 border'}">${m.isPaid?'✓':''}</button></div>`; });
-            document.getElementById('mTotalAmount').innerText = `฿${Math.round(sum).toLocaleString()}`;
-        }
-
-        function togglePay(id, idx) { const p = items.find(x => x.id === id); p.payments[idx].isPaid = !p.payments[idx].isPaid; openModal(id); }
-        async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch(e){} }
-        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) saveCloud(); }
-        function loginAdmin() { const p = prompt("รหัสผ่าน:"); if(p === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); render(); } }
-
-        function generatePDF(type) {
-            const area = document.getElementById('pdf-content');
-            const color = type === 'shopee' ? '#f97316' : '#3b82f6';
-            let html = `<div style="font-family: 'Kanit'; padding: 30px;"><h1 style="text-align: center; color: ${color};">รายการค้างชำระ: ${type.toUpperCase()}</h1>`;
-            const groups = items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid)).reduce((acc, curr) => { if(!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
-            for (const name in groups) {
-                let pTotal = 0;
-                html += `<div style="margin-bottom: 20px; border: 2px solid ${color}; border-radius: 10px; overflow: hidden;"><div style="background: ${color}; color: white; padding: 10px; font-weight: bold;">คุณ${name}</div><table style="width: 100%; border-collapse: collapse;"><tr><th style="padding: 10px; text-align: left;">รายการ</th><th style="padding: 10px; text-align: center;">งวด</th><th style="padding: 10px; text-align: right;">จ่ายแล้ว</th></tr>`;
-                groups[name].forEach(item => { const paid = item.payments.filter(m => m.isPaid).length; const sumPaid = item.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0); pTotal += sumPaid;
-                    html += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 10px;">${item.item}</td><td style="padding: 10px; text-align: center;">${paid}/${item.totalMonths}</td><td style="padding: 10px; text-align: right;">฿${Math.round(sumPaid).toLocaleString()}</td></tr>`; });
-                html += `</table><div style="padding: 10px; text-align: right; font-weight: bold;">รวมจ่ายแล้ว: ฿${Math.round(pTotal).toLocaleString()}</div></div>`;
+        async function deleteItem(id) {
+            if(confirm("ลบถาวร?")) {
+                items = items.filter(x => x.id !== id);
+                render(); await saveCloud();
             }
-            area.innerHTML = html + '</div>';
-            html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, html2canvas: { scale: 3 }, jsPDF: { unit: 'in', format: 'a4' } }).from(area).save();
+        }
+
+        async function saveCloud() {
+            try {
+                await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) });
+            } catch (e) {}
+        }
+
+        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
+
+        function loginAdmin() {
+            const p = prompt("Password:");
+            if (p === ADMIN_PASS) {
+                isAdmin = true;
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('adminLock').innerText = "🔓";
+                render();
+            }
+        }
+
+        // PDF Generator (Fixed)
+        function generatePDF(type) {
+            const content = document.getElementById('pdf-content');
+            let html = `<div style="font-family: 'Kanit'; padding: 20px;"><h2>รายงาน ${type.toUpperCase()}</h2>`;
+            items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid)).forEach(item => {
+                const paid = item.payments.filter(m => m.isPaid).length;
+                html += `<p><b>${item.debtor}</b> - ${item.item} (${paid}/${item.totalMonths} งวด)</p>`;
+            });
+            content.innerHTML = html + `</div>`;
+            html2pdf().from(content).save(`Debt-${type}.pdf`);
         }
 
         window.onload = loadData;
