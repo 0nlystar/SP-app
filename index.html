@@ -235,34 +235,103 @@
         async function saveCloud() { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); }
 
         function generatePDF(category) {
-            const filtered = items.filter(i => i.cat === category);
-            if(filtered.length === 0) return alert("ไม่มีข้อมูล");
-            const grouped = filtered.reduce((groups, item) => {
-                const name = item.debtor;
-                if (!groups[name]) groups[name] = [];
-                groups[name].push(item);
-                return groups;
-            }, {});
+    const filtered = items.filter(i => i.cat === category);
+    if(filtered.length === 0) return alert("ไม่มีข้อมูลสำหรับออกรายงาน");
 
-            const area = document.getElementById('pdf-content');
-            area.innerHTML = `<h1 style="font-size:20px; font-weight:bold; margin-bottom:15px;">รายงานสรุป ${category.toUpperCase()}</h1>`;
-            for (const name in grouped) {
-                let pTotal = 0; let rows = '';
-                grouped[name].forEach(p => {
-                    const count = p.payments.filter(m => m.isPaid).length;
-                    const sum = p.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
-                    pTotal += sum;
-                    rows += `<tr><td style="border:1px solid #ddd; padding:8px;">${p.item}</td><td style="border:1px solid #ddd; padding:8px; text-align:center;">${count}/${p.totalMonths}</td><td style="border:1px solid #ddd; padding:8px; text-align:right;">${sum.toLocaleString()}</td></tr>`;
-                });
-                area.innerHTML += `<div style="margin-bottom:20px;"><div style="background:#eee; padding:5px;">คุณ${name}</div>
-                    <table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr><th>รายการ</th><th>งวด</th><th style="text-align:right;">จ่ายแล้ว</th></tr></thead><tbody>${rows}</tbody>
-                    <tfoot><tr><td colspan="2" style="text-align:right;">รวม:</td><td style="text-align:right; font-weight:bold;">${pTotal.toLocaleString()}</td></tr></tfoot></table></div>`;
-            }
-            const element = document.getElementById('pdf-container');
-            element.classList.remove('hidden');
-            html2pdf().from(area).save().then(() => element.classList.add('hidden'));
+    const grouped = filtered.reduce((groups, item) => {
+        const name = item.debtor;
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(item);
+        return groups;
+    }, {});
+
+    const area = document.getElementById('pdf-content');
+    const color = category === 'shopee' ? '#f97316' : '#2563eb'; // ส้ม หรือ น้ำเงิน
+    const title = category === 'shopee' ? 'รายงานสรุปยอดคงค้าง Shopee' : 'รายงานสรุปยอดคงค้าง เงินกู้';
+
+    // สร้างเนื้อหา PDF ใหม่ทั้งหมด
+    let contentHtml = `
+        <div style="font-family: 'Kanit', sans-serif; color: #333;">
+            <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid ${color}; padding-bottom: 15px;">
+                <h1 style="font-size: 26px; color: ${color}; margin: 0;">${title}</h1>
+                <p style="font-size: 14px; color: #666; margin-top: 5px;">ประจำวันที่: ${new Date().toLocaleDateString('th-TH')} เวลา ${new Date().toLocaleTimeString('th-TH')} น.</p>
+            </div>
+    `;
+
+    for (const name in grouped) {
+        let pTotal = 0;
+        let rows = '';
+        grouped[name].forEach((p, index) => {
+            const count = p.payments.filter(m => m.isPaid).length;
+            const sum = p.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
+            pTotal += sum;
+            const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc'; // สลับสีแถว
+
+            rows += `
+                <tr style="background-color: ${rowBg};">
+                    <td style="border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-weight: bold;">${p.item}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 12px; text-align: center;">${count} / ${p.totalMonths}</td>
+                    <td style="border: 1px solid #e2e8f0; padding: 12px; text-align: center; color: ${color}; font-weight: bold;">฿${sum.toLocaleString()}</td>
+                </tr>`;
+        });
+
+        contentHtml += `
+            <div style="margin-bottom: 35px; break-inside: avoid;">
+                <div style="background: ${color}; color: white; padding: 10px 20px; border-radius: 8px 8px 0 0; font-size: 16px; font-weight: bold;">
+                    👤 คุณ${name}
+                </div>
+                <table style="width: 100%; border-collapse: collapse; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; color: #475569; font-size: 13px;">
+                            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: center; width: 50%;">รายการสินค้า</th>
+                            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: center; width: 20%;">งวดที่จ่ายแล้ว</th>
+                            <th style="border: 1px solid #e2e8f0; padding: 12px; text-align: center; width: 30%;">ยอดรวมที่ชำระแล้ว</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                        <tr style="background-color: #f8fafc;">
+                            <td colspan="2" style="border: 1px solid #e2e8f0; padding: 15px; text-align: right; font-weight: bold; font-size: 14px;">ยอดรวมชำระแล้วทั้งสิ้น:</td>
+                            <td style="border: 1px solid #e2e8f0; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; color: ${color};">฿${pTotal.toLocaleString()}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+    }
+
+    contentHtml += `
+            <div style="text-align: center; margin-top: 50px; font-size: 10px; color: #94a3b8; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+                เอกสารนี้สร้างโดยระบบอัตโนมัติ - ขอบคุณที่ใช้บริการ
+            </div>
+        </div>`;
+
+    area.innerHTML = contentHtml;
+
+    const element = document.getElementById('pdf-container');
+    element.classList.remove('hidden');
+
+    const opt = {
+        margin: [0.5, 0.5],
+        filename: `รายงาน-${category}-${new Date().getTime()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    // ปรับปรุงการดาวน์โหลดให้รองรับมือถือดีขึ้น (เปิด Blob ใน Tab ใหม่)
+    html2pdf().set(opt).from(area).toPdf().get('pdf').then(function (pdf) {
+        const blobUrl = pdf.output('bloburl');
+        // ตรวจสอบว่าเป็นมือถือหรือไม่
+        if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+            window.open(blobUrl, '_blank');
+        } else {
+            pdf.save();
         }
-
+    }).then(() => {
+        element.classList.add('hidden');
+    });
+}
         window.onload = loadData;
     </script>
 </body>
