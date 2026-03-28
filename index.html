@@ -3,105 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debt Cloud Pro - iPad Optimized</title>
+    <title>Debt Cloud Pro - Hybrid iPad</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .page-section { display: none; animation: fadeIn 0.2s ease-out; }
-        .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* สไตล์ปุ่มเมนูด้านล่าง */
+        .page-section { display: none; }
+        .page-section.active { display: block; animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #94a3b8; transition: 0.2s; }
         .nav-item.active { color: #10b981; }
-        
         .report-pending { background-color: #fffbeb !important; border-left: 4px solid #f59e0b !important; }
-        .modal-input:disabled { background-color: transparent; border-color: transparent; color: #333; }
+        .name-tag { cursor: pointer; transition: 0.2s; border: 1px solid #e2e8f0; }
+        .name-tag:active { transform: scale(0.9); background: #10b981; color: white; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-24">
+<body class="bg-slate-50 min-h-screen pb-28">
 
-    <div class="sticky top-0 bg-white/80 backdrop-blur-md border-b z-40 p-4 flex justify-between items-center">
-        <h1 class="font-bold text-slate-800" id="currentTitle">สรุปยอด</h1>
-        <button onclick="loginAdmin()" id="adminLock" class="text-slate-400 text-xl hover:text-emerald-500 transition">🔒</button>
+    <div class="sticky top-0 bg-white/90 backdrop-blur-md border-b z-40 p-4 flex justify-between items-center shadow-sm">
+        <div>
+            <h1 class="font-bold text-slate-800 text-lg" id="currentTitle">สรุปยอดเงิน</h1>
+            <p id="userStatus" class="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">โหมดผู้เข้าชม</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="generatePDF('all')" class="bg-slate-100 p-2 rounded-xl text-sm">📥 PDF</button>
+            <button onclick="loginAdmin()" id="adminLock" class="bg-white border p-2 rounded-xl shadow-sm">🔒</button>
+        </div>
     </div>
 
     <section id="page-home" class="page-section active p-4">
-        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6">
-            <p class="text-slate-400 text-xs font-bold uppercase mb-1">ยอดค้างจ่ายรวมเดือนนี้</p>
-            <div id="totalMonthlyAmount" class="text-3xl font-extrabold text-slate-800">฿0</div>
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-lg text-white mb-6">
+            <p class="opacity-80 text-xs font-bold uppercase mb-1">ยอดรวมที่ต้องเก็บเดือนนี้</p>
+            <div id="totalMonthlyAmount" class="text-4xl font-black">฿0</div>
         </div>
-        <div id="monthlySummaryArea" class="grid grid-cols-1 gap-3">
-            </div>
+        <h3 class="font-bold text-slate-700 mb-3 px-1 text-sm uppercase tracking-widest">แยกตามรายชื่อ</h3>
+        <div id="monthlySummaryArea" class="space-y-3"></div>
     </section>
 
     <section id="page-active" class="page-section p-4">
-        <div id="adminPanel" class="hidden mb-6 bg-emerald-900 text-white p-6 rounded-3xl shadow-lg animate-in slide-in-from-top duration-300">
-             <h2 class="font-bold mb-4 text-emerald-200 flex items-center gap-2">✨ เพิ่มรายการใหม่</h2>
+        <div id="adminPanel" class="hidden mb-6 bg-slate-900 text-white p-5 rounded-3xl shadow-xl">
+             <h2 class="font-bold mb-4 text-emerald-400">➕ เพิ่มรายการใหม่</h2>
              <div class="space-y-3">
-                 <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="w-full p-3 rounded-xl text-slate-800 outline-none border border-emerald-700">
-                 <input type="text" id="itemName" placeholder="รายการ (เช่น ค่าโรงแรม)" class="w-full p-3 rounded-xl text-slate-800 outline-none border border-emerald-700">
+                 <div id="nameTagsArea" class="flex flex-wrap gap-2 mb-2"></div>
+                 <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="w-full p-3 rounded-xl text-slate-800 outline-none">
+                 <input type="text" id="itemName" placeholder="รายการสินค้า" class="w-full p-3 rounded-xl text-slate-800 outline-none">
                  <div class="flex gap-2">
-                    <input type="number" id="defaultAmount" placeholder="฿/งวด" class="flex-1 p-3 rounded-xl text-slate-800 outline-none border border-emerald-700 font-bold">
-                    <select id="totalMonths" class="p-3 rounded-xl text-slate-800 outline-none border border-emerald-700 font-bold">
-                        <option value="1">1ด.</option><option value="3">3ด.</option><option value="6">6ด.</option><option value="12" selected>12ด.</option>
+                    <select id="category" class="w-24 p-3 rounded-xl text-slate-800 outline-none">
+                        <option value="shopee">Shopee</option>
+                        <option value="loan">เงินกู้</option>
+                    </select>
+                    <input type="number" id="defaultAmount" placeholder="ยอด/งวด" class="flex-1 p-3 rounded-xl text-slate-800 outline-none font-bold">
+                    <select id="totalMonths" class="w-20 p-3 rounded-xl text-slate-800 outline-none">
+                        <option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="12" selected>12</option><option value="24">24</option>
                     </select>
                  </div>
-                 <button onclick="addItem()" class="w-full bg-emerald-400 text-emerald-900 font-bold py-3.5 rounded-xl hover:bg-emerald-300 transition active:scale-95 shadow-md">บันทึกข้อมูลลง Cloud</button>
+                 <button onclick="addItem()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl active:scale-95 transition shadow-lg">บันทึกข้อมูล</button>
              </div>
         </div>
 
-        <div class="space-y-6">
-            <div>
-                <h3 class="text-orange-500 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wider">
-                    <span class="w-1.5 h-4 bg-orange-400 rounded-full"></span> 🛒 SHOPEE (กำลังดำเนินการ)
-                </h3>
-                <div id="shopeeList" class="space-y-2"></div>
+        <div id="groupedListArea" class="space-y-8">
             </div>
-            <div>
-                <h3 class="text-blue-600 text-sm font-bold mb-3 flex items-center gap-2 uppercase tracking-wider">
-                    <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span> 💵 เงินกู้/ทั่วไป (ยังไม่ครบ)
-                </h3>
-                <div id="loanList" class="space-y-2"></div>
-            </div>
-        </div>
     </section>
 
-    <section id="page-history" class="page-section p-4">
-        <div class="bg-slate-200 text-slate-500 text-[10px] p-2 rounded-lg text-center mb-4 font-bold uppercase tracking-widest">
-            รายการที่ผ่อนครบแล้วจะถูกย้ายมาที่นี่
-        </div>
-        <div id="historyList" class="space-y-2"></div>
+    <section id="page-history" class="page-section p-4 text-center">
+        <div id="historyList" class="space-y-2 text-left"></div>
     </section>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex h-20 pb-4 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-50">
-        <button onclick="switchPage('home', 'สรุปยอด')" class="nav-item active" id="nav-home">
-            <span class="text-2xl mb-1">🏠</span><span>สรุป</span>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t flex h-20 pb-4 shadow-2xl z-50">
+        <button onclick="switchPage('home', 'สรุปยอดเงิน')" class="nav-item active" id="nav-home">
+            <span class="text-2xl mb-1">🏠</span><span>Dashboard</span>
         </button>
-        <button onclick="switchPage('active', 'รายการค้าง')" class="nav-item" id="nav-active">
+        <button onclick="switchPage('active', 'รายการค้างชำระ')" class="nav-item" id="nav-active">
             <span class="text-2xl mb-1">📝</span><span>รายการ</span>
         </button>
-        <button onclick="switchPage('history', 'ประวัติ')" class="nav-item" id="nav-history">
+        <button onclick="switchPage('history', 'จบการผ่อน')" class="nav-item" id="nav-history">
             <span class="text-2xl mb-1">✅</span><span>ประวัติ</span>
         </button>
     </nav>
 
     <div id="detailModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl transition-all scale-95 opacity-0 duration-300" id="modalContent">
-            <div class="flex justify-between items-center mb-6">
+        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-7 shadow-2xl transition-all scale-95 opacity-0 duration-200" id="modalContent">
+            <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h3 id="mDebtor" class="text-xl font-bold text-gray-800"></h3>
-                    <p id="mItem" class="text-xs text-slate-500 italic"></p>
+                    <h3 id="mDebtor" class="text-2xl font-black text-slate-800"></h3>
+                    <p id="mItem" class="text-sm text-slate-400 italic"></p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 text-3xl hover:text-slate-600">&times;</button>
+                <button onclick="closeModal()" class="text-slate-300 text-4xl">&times;</button>
             </div>
-            <div id="monthGrid" class="space-y-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar relative">
-                </div>
-            <div class="mt-6 p-4 bg-green-50 rounded-2xl flex justify-between items-center font-bold text-green-700 border border-green-100">
-                <span>ยอดรวมจ่ายแล้ว:</span><span id="mTotalAmount" class="text-xl">฿0</span>
+            <div id="monthGrid" class="space-y-2 max-h-[45vh] overflow-y-auto pr-2"></div>
+            <div class="mt-6 p-5 bg-slate-50 rounded-3xl flex justify-between items-center border border-slate-100">
+                <span class="font-bold text-slate-500">จ่ายรวมแล้ว:</span>
+                <span id="mTotalAmount" class="text-2xl font-black text-emerald-600">฿0</span>
             </div>
-            <button onclick="closeModal()" class="w-full mt-4 bg-slate-800 text-white py-3 rounded-2xl font-bold hover:bg-black transition active:scale-95 shadow-md">ปิดหน้าต่าง</button>
+            <button onclick="closeModal()" class="w-full mt-4 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">ตกลง</button>
         </div>
     </div>
 
@@ -110,7 +105,6 @@
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuoGoCZ0IisovMTtrJmbwqL4gS_mSIRYiPINPJPCmqCkDLjpm2IfUgDJ4s6ZgGwVHq/exec"; 
         const ADMIN_PASS = "onlystar"; 
-
         let items = [];
         let isAdmin = false;
 
@@ -118,43 +112,8 @@
             try {
                 const res = await fetch(SCRIPT_URL);
                 const rawData = await res.text();
-                if (rawData) { 
-                    items = JSON.parse(rawData); 
-                    // ตรวจสอบโครงสร้างข้อมูลเก่า (เผื่อต้องเติม reported)
-                    items.forEach(item => {
-                        item.payments.forEach(p => {
-                            if (p.reported === undefined) p.reported = false;
-                        });
-                    });
-                    render(); 
-                }
-            } catch (e) { console.error("Load failed", e); }
-        }
-
-        function loginAdmin() {
-            const pass = prompt("รหัสผ่าน Admin:");
-            if (pass === ADMIN_PASS) {
-                isAdmin = true;
-                // ปรับแต่ง UI เมื่อ Login
-                document.getElementById('adminPanel').classList.remove('hidden');
-                document.getElementById('userStatus').innerText = "โหมด: แอดมิน (จัดการได้)";
-                document.getElementById('userStatus').classList.replace('text-emerald-600', 'text-red-600');
-                document.getElementById('adminLock').innerText = "🔓";
-                document.getElementById('adminLock').onclick = logoutAdmin; // เปลี่ยนฟังก์ชันเป็น Logout
-                
-                // สำหรับ Card ทั่วไป ถ้าเป็นแอดมิน ให้แสดงปุ่มลบ
-                render();
-            } else if(pass !== null) { alert("รหัสผ่านผิด!"); }
-        }
-
-        function logoutAdmin() {
-            isAdmin = false;
-            document.getElementById('adminPanel').classList.add('hidden');
-            document.getElementById('userStatus').innerText = "โหมด: ผู้เข้าชม (ดูอย่างเดียว)";
-            document.getElementById('userStatus').classList.replace('text-red-600', 'text-emerald-600');
-            document.getElementById('adminLock').innerText = "🔒";
-            document.getElementById('adminLock').onclick = loginAdmin; // เปลี่ยนฟังก์ชันกลับเป็น Login
-            render();
+                if (rawData) { items = JSON.parse(rawData); render(); }
+            } catch (e) { console.error(e); }
         }
 
         function switchPage(pageId, title) {
@@ -163,129 +122,133 @@
             document.getElementById('page-' + pageId).classList.add('active');
             document.getElementById('nav-' + pageId).classList.add('active');
             document.getElementById('currentTitle').innerText = title;
-            window.scrollTo({ top: 0, behavior: 'instant' }); // โหลดหน้าใหม่ iPad ไม่หน่วง
+            window.scrollTo(0,0);
         }
 
         function render() {
-            const shopeeList = document.getElementById('shopeeList');
-            const loanList = document.getElementById('loanList');
             const historyList = document.getElementById('historyList');
+            const groupedArea = document.getElementById('groupedListArea');
+            const summaryArea = document.getElementById('monthlySummaryArea');
             
-            shopeeList.innerHTML = ''; loanList.innerHTML = ''; historyList.innerHTML = '';
+            historyList.innerHTML = ''; summaryArea.innerHTML = ''; groupedArea.innerHTML = '';
             
-            let totalSummary = 0;
+            let totalMonthAll = 0;
 
-            items.forEach(p => {
-                const paidCount = p.payments.filter(m => m.isPaid).length;
-                const paidSum = p.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
-                const isCompleted = paidCount === p.totalMonths;
-                
-                // คำนวณยอดสรุป (หาต่องวด)
-                const nextPayment = p.payments.find(m => !m.isPaid);
-                if (nextPayment) totalSummary += nextPayment.amount;
+            // 1. แยกกลุ่มข้อมูลตามรายชื่อ (เฉพาะรายการที่ไม่จบ)
+            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid));
+            const completedItems = items.filter(i => i.payments.every(p => p.isPaid));
 
-                // ⭐ การแสดงผลแบบ Card (iPad ชอบแบบนี้)
-                const cardHtml = renderCard(p);
+            const groups = activeItems.reduce((acc, item) => {
+                if (!acc[item.debtor]) acc[item.debtor] = [];
+                acc[item.debtor].push(item);
+                return acc;
+            }, {});
 
-                if (isCompleted) {
-                    historyList.innerHTML += cardHtml;
-                } else {
-                    if(p.cat === 'shopee') shopeeList.innerHTML += cardHtml; else loanList.innerHTML += cardHtml;
-                }
-            });
+            // 2. แสดงผลในหน้า "รายการค้าง" (แยกคน + เรียงเดือนมากไปน้อย)
+            for (const name in groups) {
+                // เรียงเดือนคงเหลือจากมากไปน้อย
+                groups[name].sort((a, b) => {
+                    const remainA = a.payments.filter(p => !p.isPaid).length;
+                    const remainB = b.payments.filter(p => !p.isPaid).length;
+                    return remainB - remainA;
+                });
 
-            // อัปเดตหน้าสรุป
-            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(totalSummary).toLocaleString()}`;
-            updateSummaryArea();
+                let groupHtml = `<div class="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4 border-b pb-3 border-slate-50">
+                        <h3 class="font-black text-slate-800 text-lg uppercase">👤 ${name}</h3>
+                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg font-bold text-slate-500">${groups[name].length} รายการ</span>
+                    </div>
+                    <div class="space-y-3">`;
+
+                groups[name].forEach(p => {
+                    groupHtml += renderCard(p);
+                    const nextPayment = p.payments.find(m => !m.isPaid);
+                    if (nextPayment) totalMonthAll += nextPayment.amount;
+                });
+
+                groupHtml += `</div></div>`;
+                groupedArea.innerHTML += groupHtml;
+            }
+
+            // 3. แสดงผลหน้าประวัติ
+            completedItems.forEach(p => historyList.innerHTML += renderCard(p));
+
+            // 4. แสดงผลหน้าสรุป
+            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(totalMonthAll).toLocaleString()}`;
+            updateDashboard(groups);
+            renderNameTags();
         }
 
         function renderCard(p) {
             const paidCount = p.payments.filter(m => m.isPaid).length;
-            const hasReport = p.payments.some(m => m.reported && !m.isPaid);
+            const remains = p.totalMonths - paidCount;
             const percent = Math.round((paidCount / p.totalMonths) * 100);
+            const hasReport = p.payments.some(m => m.reported && !m.isPaid);
             const isCompleted = paidCount === p.totalMonths;
-            
-            // ⭐ ใหม่: ปุ่มถังขยะสีแดง (แสดงเมื่อ Login แอดมินเท่านั้น)
-            // ใช้ flex เพื่อจัดปุ่มให้อยู่ขวาสุดอย่างสวยงาม
-            const deleteIconHtml = isAdmin ? `
-                <button onclick="event.stopPropagation(); deleteItem(${p.id})" class="text-lg ml-3 text-red-500 hover:text-red-700 transition active:scale-95">
-                    🗑️
-                </button>
-            ` : '';
-
-            // สีแถบความคืบหน้าตามหมวด
-            const progressBarColor = isCompleted ? 'bg-emerald-500' : (p.cat === 'shopee' ? 'bg-orange-400' : 'bg-blue-500');
 
             return `
-                <div onclick="openModal(${p.id})" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center transition hover:border-slate-200 active:bg-slate-50 ${hasReport && !isCompleted ?'report-pending':''}">
+                <div onclick="openModal(${p.id})" class="relative group flex items-center justify-between p-3 rounded-2xl border border-slate-50 hover:bg-slate-50 transition active:scale-[0.98] ${hasReport && !isCompleted ? 'report-pending' : 'bg-white shadow-sm'}">
                     <div class="flex-1">
-                        <div class="font-bold text-slate-700 flex items-center gap-1.5">
-                            ${hasReport && !isCompleted ?'<span class="text-orange-500">🚩</span>':''}${p.debtor}
+                        <div class="font-bold text-sm text-slate-700">${hasReport && !isCompleted ? '🚩 ' : ''}${p.item}</div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-[9px] font-bold uppercase ${p.cat==='shopee'?'text-orange-500':'text-blue-500'}">${p.cat}</span>
+                            <span class="text-[9px] text-slate-400">คงเหลือ ${remains} งวด</span>
                         </div>
-                        <div class="text-[10px] text-slate-400 italic">${p.item}</div>
                     </div>
-                    <div class="text-right flex items-center">
-                        <div class="mr-1">
-                            <div class="text-xs font-bold text-slate-500">${paidCount}/${p.totalMonths} งวด</div>
-                            <div class="w-16 bg-slate-100 h-1 rounded-full mt-1 overflow-hidden relative">
-                                <div class="${progressBarColor} h-full transition-all duration-300" style="width: ${percent}%"></div>
+                    <div class="text-right flex items-center gap-3">
+                        <div>
+                            <div class="text-xs font-black text-slate-600">${percent}%</div>
+                            <div class="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full ${p.cat==='shopee'?'bg-orange-400':'bg-blue-500'}" style="width:${percent}%"></div>
                             </div>
                         </div>
-                        ${deleteIconHtml}
+                        ${isAdmin ? `<button onclick="event.stopPropagation(); deleteItem(${p.id})" class="text-red-500 text-lg">🗑️</button>` : ''}
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        function updateSummaryArea() {
-            const area = document.getElementById('monthlySummaryArea'); 
-            area.innerHTML = '';
-            const debtorGroups = items.reduce((acc, curr) => {
-                const nextPayment = curr.payments.find(p => !p.isPaid);
-                if (nextPayment) acc[curr.debtor] = (acc[curr.debtor] || 0) + (nextPayment.amount || 0);
-                return acc;
-            }, {});
-            for (const name in debtorGroups) {
-                if (debtorGroups[name] > 0) {
-                    area.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-inner flex justify-between items-center animate-in fade-in">
-                            <div class="text-xs text-emerald-700 font-bold">คุณ${name}</div>
-                            <div class="text-lg font-extrabold text-emerald-900">฿${Math.round(debtorGroups[name]).toLocaleString()}</div>
-                        </div>`;
-                }
+        function updateDashboard(groups) {
+            const area = document.getElementById('monthlySummaryArea');
+            for (const name in groups) {
+                const monthlySum = groups[name].reduce((s, item) => {
+                    const next = item.payments.find(p => !p.isPaid);
+                    return s + (next ? next.amount : 0);
+                }, 0);
+                area.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl border border-emerald-50 shadow-sm flex justify-between items-center">
+                        <span class="font-bold text-slate-600">คุณ${name}</span>
+                        <span class="font-black text-emerald-600">฿${Math.round(monthlySum).toLocaleString()}</span>
+                    </div>`;
             }
         }
 
+        function renderNameTags() {
+            const area = document.getElementById('nameTagsArea');
+            const names = [...new Set(items.map(i => i.debtor))];
+            area.innerHTML = names.map(n => `<div onclick="selectName('${n}')" class="name-tag px-3 py-1 rounded-full bg-white text-[10px] font-bold text-slate-500 shadow-sm">${n}</div>`).join('');
+        }
+
+        function selectName(n) { document.getElementById('debtorName').value = n; }
+
         async function addItem() {
-            if (!isAdmin) return;
-            const debtor = document.getElementById('debtorName').value.trim();
+            if(!isAdmin) return;
+            const name = document.getElementById('debtorName').value.trim();
             const item = document.getElementById('itemName').value.trim();
-            const amount = document.getElementById('defaultAmount').value;
+            const amt = document.getElementById('defaultAmount').value;
             const months = parseInt(document.getElementById('totalMonths').value);
-            if (!debtor || !item || !amount) return alert("กรอกข้อมูลให้ครบครับ");
+            if(!name || !item || !amt) return alert("กรอกข้อมูลไม่ครบ");
 
-            // แสดง Loading เบาๆ
-            document.getElementById('adminPanel').classList.add('opacity-70');
-
-            items.push({ 
-                id: Date.now(), cat: document.getElementById('category').value, 
-                debtor, item, totalMonths: months, 
-                payments: Array.from({length: months}, () => ({isPaid: false, amount: parseFloat(amount), reported: false})) 
+            items.push({
+                id: Date.now(), cat: document.getElementById('category').value,
+                debtor: name, item: item, totalMonths: months,
+                payments: Array.from({length: months}, () => ({isPaid: false, amount: parseFloat(amt), reported: false}))
             });
-            render(); 
-            await saveCloud();
-            
-            // เคลียร์ฟอร์ม
+            render(); await saveCloud();
             document.getElementById('itemName').value = ''; document.getElementById('defaultAmount').value = '';
-            document.getElementById('adminPanel').classList.remove('opacity-70');
-            alert("บันทึกสำเร็จ ✅");
         }
 
         function openModal(id) {
             const p = items.find(x => x.id === id);
-            const paidCount = p.payments.filter(m => m.isPaid).length;
-            const isCompleted = paidCount === p.totalMonths;
-            
             document.getElementById('mDebtor').innerText = p.debtor;
             document.getElementById('mItem').innerText = p.item;
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
@@ -293,102 +256,82 @@
             const modal = document.getElementById('detailModal');
             const content = document.getElementById('modalContent');
             modal.classList.remove('hidden');
-            setTimeout(() => content.classList.remove('scale-95', 'opacity-0'), 10);
-
-            // ถ้าจ่ายครบแล้ว ให้ซ่อนส่วนแอดมินโดยอัตโนมัติ (ยกเว้นแอดมินต้องการแก้ไขจริงๆ)
-            const canEdit = isAdmin && !isCompleted;
+            setTimeout(() => content.classList.replace('opacity-0', 'opacity-100'), 10);
+            setTimeout(() => content.classList.replace('scale-95', 'scale-100'), 10);
 
             p.payments.forEach((m, i) => {
                 if(m.isPaid) sum += m.amount;
-                
-                // ปุ่ม Report (แสดงเฉพาะคนที่ยังไม่จ่าย และไม่ได้ล็อกอินแอดมิน)
-                const reportBtn = (!m.isPaid && !isAdmin) ? 
-                    `<button onclick="reportPay(${p.id},${i})" class="px-2 py-1.5 text-[10px] rounded-lg ${m.reported ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400 hover:bg-orange-500 hover:text-white'} transition font-bold">${m.reported ? '🚩 แจ้งแล้ว' : '🚩 แจ้งจ่าย'}</button>` : '';
-                
-                const statusClass = (m.reported && !m.isPaid) ? 'bg-amber-50 border-amber-200' : (m.isPaid ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100');
-
-                // ⭐ ใน Modal เรายังใช้ปุ่มติ๊ก ✓ เหมือนเดิม เพราะมันสื่อความหมายดีกว่าถังขยะในการยืนยันยอด
-                grid.innerHTML += `<div class="flex items-center gap-2 p-2 rounded-xl border ${statusClass}">
-                    <span class="text-[10px] w-12 text-slate-400 font-bold italic">งวด ${i+1}</span>
-                    <input type="number" value="${m.amount || ''}" ${!canEdit ? 'disabled' : ''} onchange="updateAmt(${p.id},${i},this.value)" class="modal-input flex-1 text-sm p-1.5 rounded-lg border outline-none font-bold text-right pr-4 text-slate-700">
-                    ${reportBtn}
-                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-10 h-10 rounded-xl transition ${m.isPaid ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-300 border'}">${m.isPaid ? '✓' : ''}</button>
+                const statusColor = m.isPaid ? 'bg-emerald-50 border-emerald-100' : (m.reported ? 'bg-amber-50 border-amber-200' : 'bg-slate-50');
+                grid.innerHTML += `<div class="flex items-center gap-2 p-3 rounded-2xl border ${statusColor}">
+                    <span class="text-[9px] w-12 font-bold text-slate-400 italic">งวด ${i+1}</span>
+                    <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id},${i},this.value)" class="flex-1 bg-transparent text-right font-bold text-slate-700 outline-none">
+                    ${!m.isPaid && !isAdmin ? `<button onclick="reportPay(${p.id},${i})" class="text-[9px] font-bold px-2 py-1 rounded-lg ${m.reported?'bg-orange-500 text-white':'bg-slate-200 text-slate-500'}">${m.reported?'แจ้งแล้ว':'แจ้งจ่าย'}</button>`:''}
+                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-10 h-10 rounded-xl flex items-center justify-center transition ${m.isPaid?'bg-emerald-500 text-white shadow-md':'bg-white text-slate-200 border'}">${m.isPaid?'✓':''}</button>
                 </div>`;
             });
             document.getElementById('mTotalAmount').innerText = `฿${Math.round(sum).toLocaleString()}`;
         }
 
-        async function reportPay(id, idx) {
-            const p = items.find(x => x.id === id);
-            p.payments[idx].reported = !p.payments[idx].reported;
-            openModal(id);
-            render();
-            await saveCloud();
-        }
+        async function reportPay(id, idx) { items.find(x => x.id === id).payments[idx].reported = true; openModal(id); render(); await saveCloud(); }
+        function togglePay(id, idx) { const p = items.find(x => x.id === id); p.payments[idx].isPaid = !p.payments[idx].isPaid; if(p.payments[idx].isPaid) p.payments[idx].reported = false; openModal(id); }
+        function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val); }
 
-        function updateAmt(id, idx, val) { const i = items.find(x => x.id === id); i.payments[idx].amount = Math.round(parseFloat(val) || 0); }
-        
-        function togglePay(id, idx) { 
-            const i = items.find(x => x.id === id); 
-            i.payments[idx].isPaid = !i.payments[idx].isPaid; 
-            if(i.payments[idx].isPaid) i.payments[idx].reported = false; 
-            openModal(id); 
-        }
-
-        async function closeModal() { 
-            const content = document.getElementById('modalContent');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) saveCloud(); }, 300);
-        }
-
-        // ⭐ ลบข้อมูล (ใช้คอนเฟิร์มป้องกันการเผลอกด)
-        async function deleteItem(id) { 
-            if (isAdmin && confirm('⚠️ ยืนยันการลบรายการนี้อย่างถาวร?')) { 
-                items = items.filter(x => x.id !== id); 
-                render(); 
-                await saveCloud(); 
-                alert("ลบเรียบร้อย 🗑️");
-            } 
-        }
-
-        async function saveCloud() { 
-            try { 
-                await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); 
-            } catch (e) { 
-                alert("⚠️ บันทึกล้มเหลว เช็กอินเทอร์เน็ต");
-            } 
-        }
-
-        function toggleTable(cat) { const area = document.getElementById(`${cat}TableArea`); const icon = document.getElementById(`${cat}Icon`); area.style.display = (area.style.display === "none") ? "block" : "none"; icon.innerText = (area.style.display === "none") ? "▶" : "▼"; }
-
-        function generatePDF(category) {
-            // โค้ด PDF เดิม (ไม่เกี่ยวกับหน้าแอดมิน)
-            const filtered = items.filter(i => i.cat === category && i.payments.some(p => !p.isPaid));
-            if(filtered.length === 0) return alert("ไม่มีข้อมูลค้างชำระ");
-            const grouped = filtered.reduce((groups, item) => {
-                const name = item.debtor;
-                if (!groups[name]) groups[name] = [];
-                groups[name].push(item);
-                return groups;
-            }, {});
-            const area = document.getElementById('pdf-content');
-            const color = category === 'shopee' ? '#f97316' : '#2563eb';
-            let contentHtml = `<div style="font-family: 'Kanit', sans-serif; padding: 20px;"><div style="text-align: center; border-bottom: 3px solid ${color}; padding-bottom: 15px; margin-bottom: 20px;"><h1 style="color: ${color}; margin: 0;">สรุปยอดค้าง: ${category.toUpperCase()}</h1><p style="font-size: 12px; color: #666;">วันที่: ${new Date().toLocaleDateString('th-TH')}</p></div>`;
-            for (const name in grouped) {
-                let pTotal = 0; let rows = '';
-                grouped[name].forEach((p, idx) => {
-                    const paidSum = p.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
-                    pTotal += paidSum;
-                    rows += `<tr style="background: ${idx%2===0?'#fff':'#f8fafc'}; border-bottom: 1px solid #eee;"><td style="padding: 10px;">${p.item}</td><td style="padding: 10px; text-align: center;">${p.payments.filter(m=>m.isPaid).length}/${p.totalMonths}</td><td style="padding: 10px; text-align: right;">฿${Math.round(paidSum).toLocaleString()}</td></tr>`;
-                });
-                contentHtml += `<div style="margin-bottom: 30px; break-inside: avoid;"><div style="background: ${color}; color: white; padding: 8px 15px; border-radius: 5px 5px 0 0;">👤 คุณ${name}</div><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #f1f5f9;"><th>รายการ</th><th>งวด</th><th style="text-align: right;">จ่ายแล้ว</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2" style="text-align: right; padding: 10px;">รวมจ่ายแล้ว:</td><td style="text-align: right; font-weight: bold; color: ${color};">฿${Math.round(pTotal).toLocaleString()}</td></tr></tfoot></table></div>`;
+        function loginAdmin() {
+            const p = prompt("รหัสผ่าน:");
+            if(p === ADMIN_PASS) {
+                isAdmin = true;
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('userStatus').innerText = "โหมด: แอดมิน";
+                document.getElementById('userStatus').classList.replace('text-emerald-500', 'text-red-500');
+                document.getElementById('adminLock').innerText = "🔓";
+                render();
             }
-            area.innerHTML = contentHtml + '</div>';
-            const element = document.getElementById('pdf-container');
-            element.classList.remove('hidden');
-            const opt = { margin: 0.5, filename: `Report-${category}.pdf`, html2canvas: { scale: 3 }, jsPDF: { unit: 'in', format: 'a4' } };
-            html2pdf().set(opt).from(area).toPdf().get('pdf').save().then(() => element.classList.add('hidden'));
         }
+
+        async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
+        async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch(e){} }
+        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) saveCloud(); }
+
+        function generatePDF(type) {
+            const area = document.getElementById('pdf-content');
+            let html = `<div style="font-family: 'Kanit'; padding: 30px;">
+                <h1 style="text-align: center; color: #10b981;">สรุปยอดค้างชำระทั้งหมด</h1>
+                <p style="text-align: center; font-size: 12px; color: #666;">วันที่: ${new Date().toLocaleDateString('th-TH')}</p><br>`;
+            
+            // จัดกลุ่มข้อมูลใหม่สำหรับ PDF
+            const groups = items.filter(i => i.payments.some(p => !p.isPaid)).reduce((acc, curr) => {
+                if(!acc[curr.debtor]) acc[curr.debtor] = [];
+                acc[curr.debtor].push(curr);
+                return acc;
+            }, {});
+
+            for (const name in groups) {
+                let pTotal = 0;
+                html += `<div style="margin-bottom: 25px; border: 1px solid #eee; border-radius: 10px; overflow: hidden; break-inside: avoid;">
+                    <div style="background: #10b981; color: white; padding: 10px 15px; font-weight: bold;">คุณ${name}</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <tr style="background: #f8fafc;">
+                            <th style="padding: 10px; text-align: left;">รายการ</th>
+                            <th style="padding: 10px; text-align: center;">งวด</th>
+                            <th style="padding: 10px; text-align: right;">จ่ายแล้ว</th>
+                        </tr>`;
+                groups[name].forEach(item => {
+                    const paid = item.payments.filter(m => m.isPaid).length;
+                    const sumPaid = item.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
+                    pTotal += sumPaid;
+                    html += `<tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px;">${item.item} (${item.cat})</td>
+                        <td style="padding: 10px; text-align: center;">${paid}/${item.totalMonths}</td>
+                        <td style="padding: 10px; text-align: right;">฿${Math.round(sumPaid).toLocaleString()}</td>
+                    </tr>`;
+                });
+                html += `</table><div style="padding: 10px; text-align: right; background: #fdfdfd; font-weight: bold; color: #059669;">รวมจ่ายไปแล้ว: ฿${Math.round(pTotal).toLocaleString()}</div></div>`;
+            }
+            area.innerHTML = html + '</div>';
+            const opt = { margin: 0.3, filename: `Debt-Summary.pdf`, html2canvas: { scale: 3 }, jsPDF: { unit: 'in', format: 'a4' } };
+            html2pdf().set(opt).from(area).save();
+        }
+
         window.onload = loadData;
     </script>
 </body>
