@@ -3,27 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBT CLOUD - REALTIME TRACKER</title>
+    <title>DEBT CLOUD - ZERO INDEX SYSTEM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #FFF0F3;    /* 60% Pink */
-            --bg-secondary: #E3F2FD;  /* 30% Blue */
-            --color-accent: #FFD54F;  /* 10% Yellow */
+            --bg-primary: #FFF0F3;
+            --bg-secondary: #E3F2FD;
+            --color-accent: #FFD54F;
             --text-dark: #37474F;
         }
-        body { 
-            font-family: 'Kanit', sans-serif; 
-            background-color: var(--bg-primary);
-            color: var(--text-dark);
-        }
+        body { font-family: 'Kanit', sans-serif; background-color: var(--bg-primary); color: var(--text-dark); }
         .page-section { display: none; }
         .page-section.active { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .secondary-card { background-color: var(--bg-secondary); border: 2px solid #BBDEFB; border-radius: 24px; }
-        .cta-btn { background-color: var(--color-accent); color: #5D4037; box-shadow: 0 4px 0px #FBC02D; transition: all 0.1s; }
+        .cta-btn { background-color: var(--color-accent); color: #5D4037; box-shadow: 0 4px 0px #FBC02D; transition: all 0.1s; border-radius: 16px; font-weight: bold; }
         .cta-btn:active { transform: translateY(2px); box-shadow: 0 2px 0px #FBC02D; }
         .debt-card { background: white; border: 1px solid #F8BBD0; border-radius: 20px; }
         .report-pending { border: 2px solid #FFAB91 !important; background: #FFF9F8 !important; }
@@ -36,7 +32,7 @@
 
     <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
         <div class="flex items-center gap-2">
-            <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">D</div>
+            <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">0</div>
             <h1 class="font-bold text-xl text-[#AD1457]" id="currentTitle">สรุปยอด</h1>
         </div>
         <div class="flex gap-1.5">
@@ -62,19 +58,19 @@
                     <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none">
                     <input type="text" id="itemName" placeholder="รายการสินค้า" class="w-full p-4 rounded-xl border-none outline-none">
                     <div class="flex gap-2">
-                        <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600">
+                        <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600 border-none">
                             <option value="shopee">Shopee</option>
                             <option value="loan">เงินกู้</option>
                         </select>
-                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600">
+                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
                             <option value="3">3 เดือน</option>
                             <option value="6">6 เดือน</option>
                             <option value="9">9 เดือน</option>
                             <option value="12" selected>12 เดือน</option>
                         </select>
                     </div>
-                    <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center">
-                    <button onclick="addItem()" class="cta-btn w-full py-4 rounded-xl font-bold">บันทึกรายการ</button>
+                    <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
+                    <button onclick="addItem()" class="cta-btn w-full py-4">บันทึกรายการ</button>
                 </div>
             </div>
 
@@ -83,7 +79,7 @@
                     <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600">SHOPEE</button>
                     <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400">LOAN</button>
                 </div>
-                <button id="globalPlusBtn" onclick="plusOneCategory()" class="hidden w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg active:scale-90 font-bold text-xl">+</button>
+                <button id="globalPlusBtn" onclick="plusOneCategory()" class="hidden w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg font-bold text-xl">+</button>
             </div>
             <div id="activeListContent" class="space-y-4"></div>
         </section>
@@ -96,15 +92,15 @@
     <nav class="fixed bottom-0 left-0 w-full h-20 nav-bar flex items-center px-4 z-50">
         <button onclick="switchPage('home', 'สรุปยอด')" class="flex-1 flex flex-col items-center text-pink-500" id="nav-home">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-            <span class="text-[10px] font-bold mt-1 uppercase">Home</span>
+            <span class="text-[10px] font-bold mt-1">HOME</span>
         </button>
         <button onclick="switchPage('active', 'รายการค้าง')" class="flex-1 flex flex-col items-center text-slate-400" id="nav-active">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
-            <span class="text-[10px] font-bold mt-1 uppercase">List</span>
+            <span class="text-[10px] font-bold mt-1">LIST</span>
         </button>
         <button onclick="switchPage('history', 'ประวัติ')" class="flex-1 flex flex-col items-center text-slate-400" id="nav-history">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <span class="text-[10px] font-bold mt-1 uppercase">History</span>
+            <span class="text-[10px] font-bold mt-1">HISTORY</span>
         </button>
     </nav>
 
@@ -115,10 +111,10 @@
             <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none">
-                <span class="font-bold text-xs text-blue-700">Paid Total</span>
+                <span class="font-bold text-xs text-blue-700 uppercase">Paid Total</span>
                 <span id="mTotalAmount" class="text-2xl font-bold text-blue-800">฿0</span>
             </div>
-            <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4 rounded-2xl font-bold">Close</button>
+            <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4">Close</button>
         </div>
     </div>
 
@@ -191,15 +187,14 @@
             renderNameTags();
         }
 
-        // --- แก้ไข: การแสดงเลขงวดในหน้า List ให้ตรงตามความจริง ---
+        // --- แก้ไข: แสดงเลขงวดเริ่มต้นจาก 0 ---
         function renderCard(p) {
             const totalMonths = p.payments.length;
-            // หา index ของงวดที่ต้องโชว์: ถ้ามีการแจ้งเตือน (Reported) ให้โชว์งวดนั้น ถ้าไม่มี ให้โชว์งวดที่ยังไม่จ่ายตัวแรก
             let targetIdx = p.payments.findIndex(m => m.reported && !m.isPaid);
             if (targetIdx === -1) targetIdx = p.payments.findIndex(m => !m.isPaid);
-            if (targetIdx === -1) targetIdx = totalMonths - 1; // กรณีจ่ายครบหมดแล้ว
+            if (targetIdx === -1) targetIdx = totalMonths - 1;
 
-            const displayMonth = targetIdx + 1;
+            const displayMonth = targetIdx; // แสดงเลข index โดยตรง (เช่น 0, 1, 2...)
             const paidCount = p.payments.filter(m => m.isPaid).length;
             const percent = Math.round((paidCount / totalMonths) * 100);
             const isReported = p.payments.some(m => m.reported && !m.isPaid);
@@ -209,8 +204,8 @@
                     <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-end mb-2">
-                                <div class="font-bold text-sm text-slate-700 truncate">${isReported ? '🔔 ' : ''}${p.item}</div>
-                                <div class="text-[10px] font-bold text-pink-500">งวด ${displayMonth}/${totalMonths}</div>
+                                <div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${p.item}</div>
+                                <div class="text-[10px] font-bold text-pink-500">งวด ${displayMonth}/${totalMonths - 1}</div>
                             </div>
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
                         </div>
@@ -230,7 +225,7 @@
                 const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
                 grid.innerHTML += `
                     <div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
-                        <span class="text-[9px] font-bold w-10">งวด ${i+1}</span>
+                        <span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i}</span>
                         <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none">
                         <button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button>
                     </div>`;
@@ -240,7 +235,7 @@
         }
 
         async function plusOneCategory() {
-            if(!confirm(`ยืนยันเพิ่ม +1 งวดให้ทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
+            if(!confirm(`บวก +1 งวดให้ทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
             items.forEach(item => {
                 if(item.cat === currentTab) {
                     const nextIdx = item.payments.findIndex(m => !m.isPaid);
@@ -253,27 +248,44 @@
         async function togglePay(id, idx) {
             const p = items.find(x => x.id === id);
             if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
-            else { p.payments[idx].reported = true; alert("แจ้งยอดงวดที่ " + (idx+1) + " เรียบร้อย 🔔"); }
+            else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + idx + " แล้ว 🔔"); }
             openModal(id); render(); await saveCloud();
         }
 
         function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0; saveCloud(); }
+
+        // --- แก้ไข: เพิ่มรายการให้เริ่มจาก Index 0 ---
         async function addItem() {
             const n = document.getElementById('debtorName').value;
             const it = document.getElementById('itemName').value;
             const a = document.getElementById('defaultAmount').value;
             const m = parseInt(document.getElementById('monthCount').value);
             if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
-            items.push({ id: Date.now(), cat: document.getElementById('category').value, debtor: n, item: it, payments: Array.from({length: m}, () => ({isPaid: false, amount: parseFloat(a), reported: false})) });
+            
+            items.push({ 
+                id: Date.now(), 
+                cat: document.getElementById('category').value, 
+                debtor: n, 
+                item: it, 
+                payments: Array.from({length: m}, (_, index) => ({
+                    idx: index, // เก็บค่า index 0, 1, 2...
+                    isPaid: false, 
+                    amount: parseFloat(a), 
+                    reported: false
+                })) 
+            });
+            
             render(); await saveCloud();
+            alert("เพิ่มรายการใหม่ (เริ่มนับ 0) เรียบร้อย!");
         }
+
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
         async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {} }
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
         function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
-        // --- แก้ไข: PDF ให้ดึงเลขงวดที่ถูกต้อง (งวดที่แจ้ง หรือ งวดล่าสุดที่ค้าง) ---
+        // --- แก้ไข: PDF ให้เริ่มนับจาก 0 เช่นกัน ---
         function generatePDF(type) {
             const content = document.getElementById('pdf-content');
             const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -281,45 +293,43 @@
             if (!filtered.length) return alert("ไม่มีข้อมูล");
 
             let html = `<div style="font-family: 'Kanit', sans-serif; padding: 40px; background: #fff;">
-                <h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px;">รายการค้างชำระ: ${type.toUpperCase()}</h1>
-                <p style="font-size: 12px; color: #666;">ประจำวันที่: ${today}</p>`;
+                <h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 5px;">รายการค้าง: ${type.toUpperCase()}</h1>
+                <p style="font-size: 11px; color: #888;">วันที่: ${today}</p>`;
 
             const grouped = filtered.reduce((acc, curr) => { if (!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
             
             for (const name in grouped) {
                 let total = 0;
-                html += `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden;">
-                    <div style="background: #f5f5f5; padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #ddd;">คุณ${name}</div>
+                html += `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;">
+                    <div style="background: #f9f9f9; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #ddd;">คุณ${name}</div>
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="background: #fafafa; font-size: 11px; text-align: left;">
+                        <tr style="background: #fff; font-size: 10px; color: #888; text-align: left;">
                             <th style="padding: 10px 15px;">รายการ</th>
                             <th style="padding: 10px 15px; text-align: center;">งวดที่</th>
                             <th style="padding: 10px 15px; text-align: right;">ยอดเงิน</th>
                         </tr>`;
                 
                 grouped[name].forEach(item => {
-                    // Logic เดียวกับหน้า List: หางวดที่ Reported ก่อน ถ้าไม่มีเอางวดแรกที่ค้าง
                     let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
                     if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
                     
-                    const monthLabel = `${targetIdx + 1}/${item.payments.length}`;
                     const amount = item.payments[targetIdx].amount;
                     total += amount;
 
                     html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
-                        <td style="padding: 10px 15px;">${item.item}</td>
-                        <td style="padding: 10px 15px; text-align: center; font-weight: bold; color: #AD1457;">${monthLabel}</td>
-                        <td style="padding: 10px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
+                        <td style="padding: 12px 15px;">${item.item}</td>
+                        <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${targetIdx}/${item.payments.length - 1}</td>
+                        <td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
                     </tr>`;
                 });
 
                 html += `</table>
-                    <div style="padding: 12px 15px; text-align: right; background: #FFFDE7; font-weight: bold;">
-                        รวมทั้งสิ้น: <span style="color: #2563eb; font-size: 16px;">฿${Math.round(total).toLocaleString()}</span>
+                    <div style="padding: 15px; text-align: right; background: #FFFDE7; font-weight: bold; font-size: 16px;">
+                        ยอดรวม: <span style="color: #2563eb;">฿${Math.round(total).toLocaleString()}</span>
                     </div>
                 </div>`;
             }
-            html += `<p style="text-align: center; margin-top: 30px; color: #aaa; font-size: 9px;">DEBT CLOUD SYSTEM</p></div>`;
+            html += `<p style="text-align: center; margin-top: 40px; color: #ccc; font-size: 9px;">ZERO INDEX DEBT CLOUD</p></div>`;
             content.innerHTML = html;
             html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, jsPDF: { format: 'a4' } }).from(content).save();
         }
