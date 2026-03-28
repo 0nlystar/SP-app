@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBT CLOUD - CLASSIC SYSTEM</title>
+    <title>DEBT CLOUD - MULTI-MONTH & GLOBAL PLUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -22,7 +22,8 @@
         }
 
         .page-section { display: none; }
-        .page-section.active { display: block; }
+        .page-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .secondary-card {
             background-color: var(--bg-secondary);
@@ -82,23 +83,33 @@
             <div id="adminPanel" class="hidden mb-6 secondary-card p-6">
                 <div id="nameTagsArea" class="flex flex-wrap gap-1.5 mb-4"></div>
                 <div class="space-y-3">
-                    <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none">
-                    <input type="text" id="itemName" placeholder="รายการ" class="w-full p-4 rounded-xl border-none outline-none">
+                    <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none focus:ring-2 ring-pink-300">
+                    <input type="text" id="itemName" placeholder="รายการ" class="w-full p-4 rounded-xl border-none outline-none focus:ring-2 ring-pink-300">
                     <div class="flex gap-2">
                         <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600 border-none">
                             <option value="shopee">Shopee</option>
                             <option value="loan">เงินกู้</option>
                         </select>
-                        <input type="number" id="defaultAmount" placeholder="ยอด/งวด" class="flex-1 p-4 rounded-xl font-bold text-center border-none">
+                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
+                            <option value="3">3 เดือน</option>
+                            <option value="6">6 เดือน</option>
+                            <option value="9">9 เดือน</option>
+                            <option value="12" selected>12 เดือน</option>
+                        </select>
                     </div>
-                    <button onclick="addItem()" class="cta-btn w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest">เพิ่มรายการ (12 งวด)</button>
+                    <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none focus:ring-2 ring-pink-300">
+                    <button onclick="addItem()" class="cta-btn w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest">บันทึกลงคลาวด์</button>
                 </div>
             </div>
 
-            <div class="flex bg-white/50 p-1.5 rounded-full mb-6 border border-pink-200">
-                <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-xs font-bold rounded-full transition-all bg-white shadow-sm text-pink-600">SHOPEE</button>
-                <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-xs font-bold rounded-full transition-all text-blue-400">LOAN</button>
+            <div class="flex items-center gap-2 mb-6">
+                <div class="flex flex-1 bg-white/50 p-1 rounded-full border border-pink-200">
+                    <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600 uppercase">Shopee</button>
+                    <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400 uppercase">Loan</button>
+                </div>
+                <button id="globalPlusBtn" onclick="plusOneCategory()" class="hidden w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg active:scale-90 font-bold text-xl">+</button>
             </div>
+            
             <div id="activeListContent" class="space-y-4"></div>
         </section>
 
@@ -126,10 +137,7 @@
         <div class="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
             <div id="mDebtorSub" class="text-blue-500 font-bold text-xs uppercase"></div>
-            <div class="flex justify-between items-start mb-6">
-                <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800"></h3>
-                <button id="mPlusOneBtn" class="hidden px-4 py-2 bg-green-500 text-white text-xs font-bold rounded-full shadow-lg active:scale-95">จ่ายทั้งหมด +1</button>
-            </div>
+            <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none">
                 <span class="font-bold text-xs text-blue-700 uppercase">Paid Total</span>
@@ -165,8 +173,8 @@
 
         function switchTab(tab) {
             currentTab = tab;
-            document.getElementById('tab-shopee').className = `flex-1 py-3 text-xs font-bold rounded-full transition-all ${tab==='shopee'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
-            document.getElementById('tab-loan').className = `flex-1 py-3 text-xs font-bold rounded-full transition-all ${tab==='loan'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+            document.getElementById('tab-shopee').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='shopee'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+            document.getElementById('tab-loan').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='loan'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
             render();
         }
 
@@ -175,6 +183,9 @@
             const historyList = document.getElementById('historyList');
             const summaryArea = document.getElementById('monthlySummaryArea');
             activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
+
+            // แสดง/ซ่อนปุ่ม Global Plus
+            document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
 
             let grandTotal = 0; const summaryData = {};
             items.forEach(i => {
@@ -221,7 +232,7 @@
                     <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${reported ? 'report-pending' : ''}">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-end mb-2">
-                                <div class="font-bold text-xs text-slate-700 truncate">${reported ? '🔔 ' : ''}${p.item}</div>
+                                <div class="font-bold text-xs text-slate-700 truncate uppercase">${reported ? '🔔 ' : ''}${p.item}</div>
                                 <div class="text-[9px] font-bold text-pink-500">${percent}%</div>
                             </div>
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
@@ -238,15 +249,6 @@
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
             let totalPaid = 0;
 
-            // แสดงปุ่ม +1 เฉพาะ Admin
-            const plusBtn = document.getElementById('mPlusOneBtn');
-            if (isAdmin) {
-                plusBtn.classList.remove('hidden');
-                plusBtn.onclick = () => plusOneAll(p.id);
-            } else {
-                plusBtn.classList.add('hidden');
-            }
-
             p.payments.forEach((m, i) => {
                 if(m.isPaid) totalPaid += m.amount;
                 const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
@@ -261,16 +263,28 @@
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        // ระบบจ่าย +1 พร้อมกัน
-        async function plusOneAll(id) {
-            const p = items.find(x => x.id === id);
-            const nextIdx = p.payments.findIndex(m => !m.isPaid);
-            if (nextIdx !== -1) {
-                p.payments[nextIdx].isPaid = true;
-                p.payments[nextIdx].reported = false;
-                openModal(id); render(); await saveCloud();
+        // --- ระบบอัปเกรด: +1 ของทุกคนในหมวดหมู่ ---
+        async function plusOneCategory() {
+            if(!confirm(`ยืนยันการเพิ่ม +1 งวดให้กับทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
+            
+            let count = 0;
+            items.forEach(item => {
+                if(item.cat === currentTab) {
+                    const nextIdx = item.payments.findIndex(m => !m.isPaid);
+                    if (nextIdx !== -1) {
+                        item.payments[nextIdx].isPaid = true;
+                        item.payments[nextIdx].reported = false;
+                        count++;
+                    }
+                }
+            });
+
+            if(count > 0) {
+                render(); 
+                await saveCloud();
+                alert(`อัปเดตเรียบร้อย ${count} รายการ`);
             } else {
-                alert("จ่ายครบทุกงวดแล้ว!");
+                alert("ไม่มีงวดค้างชำระในหมวดนี้");
             }
         }
 
@@ -287,16 +301,37 @@
             const n = document.getElementById('debtorName').value;
             const it = document.getElementById('itemName').value;
             const a = document.getElementById('defaultAmount').value;
+            const m = parseInt(document.getElementById('monthCount').value); // ดึงค่าเดือนที่เลือก
+            
             if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
-            // ระบบเดิม: 12 งวด
-            items.push({ id: Date.now(), cat: document.getElementById('category').value, debtor: n, item: it, totalMonths: 12, payments: Array.from({length: 12}, () => ({isPaid: false, amount: parseFloat(a), reported: false})) });
+            
+            items.push({ 
+                id: Date.now(), 
+                cat: document.getElementById('category').value, 
+                debtor: n, 
+                item: it, 
+                totalMonths: m, // ใช้ค่าที่เลือก
+                payments: Array.from({length: m}, () => ({isPaid: false, amount: parseFloat(a), reported: false})) 
+            });
+            
             render(); await saveCloud();
+            alert(`เพิ่มรายการ ${m} เดือน เรียบร้อย!`);
         }
 
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
         async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {} }
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
-        function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
+        
+        function loginAdmin() { 
+            if (prompt("Admin Key:") === ADMIN_PASS) { 
+                isAdmin = true; 
+                document.getElementById('adminPanel').classList.remove('hidden'); 
+                document.getElementById('adminLock').innerText = "🔓"; 
+                document.getElementById('globalPlusBtn').style.display = 'flex';
+                render(); 
+            } 
+        }
+
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
         function generatePDF(type) {
