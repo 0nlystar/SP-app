@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBT CLOUD - INSTALLMENT TRACKER</title>
+    <title>DEBT CLOUD - REALTIME TRACKER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -18,42 +18,18 @@
             font-family: 'Kanit', sans-serif; 
             background-color: var(--bg-primary);
             color: var(--text-dark);
-            -webkit-tap-highlight-color: transparent; 
         }
-
         .page-section { display: none; }
-        .page-section.active { display: block; animation: fadeIn 0.3s; }
+        .page-section.active { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .secondary-card {
-            background-color: var(--bg-secondary);
-            border: 2px solid #BBDEFB;
-            border-radius: 24px;
-        }
-
-        .cta-btn {
-            background-color: var(--color-accent);
-            color: #5D4037;
-            box-shadow: 0 4px 0px #FBC02D;
-            transition: all 0.1s;
-        }
+        .secondary-card { background-color: var(--bg-secondary); border: 2px solid #BBDEFB; border-radius: 24px; }
+        .cta-btn { background-color: var(--color-accent); color: #5D4037; box-shadow: 0 4px 0px #FBC02D; transition: all 0.1s; }
         .cta-btn:active { transform: translateY(2px); box-shadow: 0 2px 0px #FBC02D; }
-
-        .debt-card {
-            background: white;
-            border: 1px solid #F8BBD0;
-            border-radius: 20px;
-        }
+        .debt-card { background: white; border: 1px solid #F8BBD0; border-radius: 20px; }
         .report-pending { border: 2px solid #FFAB91 !important; background: #FFF9F8 !important; }
-
         .progress-bar { height: 8px; background: #F3E5F5; border-radius: 10px; overflow: hidden; width: 100%; }
         .progress-fill { height: 100%; background: var(--color-accent); transition: width 0.5s; }
-
-        .nav-bar {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-top: 2px solid var(--bg-secondary);
-        }
+        .nav-bar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 2px solid var(--bg-secondary); }
     </style>
 </head>
 <body class="min-h-screen pb-28">
@@ -64,8 +40,8 @@
             <h1 class="font-bold text-xl text-[#AD1457]" id="currentTitle">สรุปยอด</h1>
         </div>
         <div class="flex gap-1.5">
-            <button onclick="generatePDF('shopee')" class="p-2 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-bold border border-orange-200 uppercase">PDF Shopee</button>
-            <button onclick="generatePDF('loan')" class="p-2 bg-blue-100 text-blue-600 rounded-lg text-[10px] font-bold border border-blue-200 uppercase">PDF Loan</button>
+            <button onclick="generatePDF('shopee')" class="p-2 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-bold border border-orange-200">PDF SHOPEE</button>
+            <button onclick="generatePDF('loan')" class="p-2 bg-blue-100 text-blue-600 rounded-lg text-[10px] font-bold border border-blue-200">PDF LOAN</button>
             <button onclick="loginAdmin()" id="adminLock" class="bg-slate-100 p-2 rounded-full text-slate-400">🔒</button>
         </div>
     </header>
@@ -83,33 +59,32 @@
             <div id="adminPanel" class="hidden mb-6 secondary-card p-6">
                 <div id="nameTagsArea" class="flex flex-wrap gap-1.5 mb-4"></div>
                 <div class="space-y-3">
-                    <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none focus:ring-2 ring-pink-300">
-                    <input type="text" id="itemName" placeholder="รายการ (เช่น iPhone 15)" class="w-full p-4 rounded-xl border-none outline-none focus:ring-2 ring-pink-300">
+                    <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none">
+                    <input type="text" id="itemName" placeholder="รายการสินค้า" class="w-full p-4 rounded-xl border-none outline-none">
                     <div class="flex gap-2">
-                        <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600 border-none">
+                        <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600">
                             <option value="shopee">Shopee</option>
                             <option value="loan">เงินกู้</option>
                         </select>
-                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
+                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600">
                             <option value="3">3 เดือน</option>
                             <option value="6">6 เดือน</option>
                             <option value="9">9 เดือน</option>
                             <option value="12" selected>12 เดือน</option>
                         </select>
                     </div>
-                    <input type="number" id="defaultAmount" placeholder="ยอดเงินต่อเดือน" class="w-full p-4 rounded-xl font-bold text-center border-none">
-                    <button onclick="addItem()" class="cta-btn w-full py-4 rounded-xl font-bold text-sm uppercase tracking-widest">บันทึกข้อมูล</button>
+                    <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center">
+                    <button onclick="addItem()" class="cta-btn w-full py-4 rounded-xl font-bold">บันทึกรายการ</button>
                 </div>
             </div>
 
             <div class="flex items-center gap-2 mb-6">
                 <div class="flex flex-1 bg-white/50 p-1 rounded-full border border-pink-200">
-                    <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600 uppercase">Shopee</button>
-                    <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400 uppercase">Loan</button>
+                    <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600">SHOPEE</button>
+                    <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400">LOAN</button>
                 </div>
                 <button id="globalPlusBtn" onclick="plusOneCategory()" class="hidden w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg active:scale-90 font-bold text-xl">+</button>
             </div>
-            
             <div id="activeListContent" class="space-y-4"></div>
         </section>
 
@@ -136,14 +111,14 @@
     <div id="detailModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end justify-center z-[60]">
         <div class="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
-            <div id="mDebtorSub" class="text-blue-500 font-bold text-xs uppercase"></div>
+            <div id="mDebtorSub" class="text-blue-500 font-bold text-xs"></div>
             <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none">
-                <span class="font-bold text-xs text-blue-700 uppercase">Paid Total</span>
+                <span class="font-bold text-xs text-blue-700">Paid Total</span>
                 <span id="mTotalAmount" class="text-2xl font-bold text-blue-800">฿0</span>
             </div>
-            <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4 rounded-2xl font-bold uppercase text-sm">Close</button>
+            <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4 rounded-2xl font-bold">Close</button>
         </div>
     </div>
 
@@ -183,7 +158,6 @@
             const historyList = document.getElementById('historyList');
             const summaryArea = document.getElementById('monthlySummaryArea');
             activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
-
             document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
 
             let grandTotal = 0; const summaryData = {};
@@ -197,11 +171,7 @@
             document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
             
             Object.keys(summaryData).forEach(name => {
-                summaryArea.innerHTML += `
-                    <div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400">
-                        <span class="font-bold text-slate-700">คุณ${name}</span>
-                        <span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span>
-                    </div>`;
+                summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
             });
 
             const activeItems = items.filter(i => i.payments.some(p => !p.isPaid) && i.cat === currentTab);
@@ -221,21 +191,26 @@
             renderNameTags();
         }
 
-        // --- แก้ไข: แสดงเลขเดือน (เช่น 6/12) ---
+        // --- แก้ไข: การแสดงเลขงวดในหน้า List ให้ตรงตามความจริง ---
         function renderCard(p) {
             const totalMonths = p.payments.length;
+            // หา index ของงวดที่ต้องโชว์: ถ้ามีการแจ้งเตือน (Reported) ให้โชว์งวดนั้น ถ้าไม่มี ให้โชว์งวดที่ยังไม่จ่ายตัวแรก
+            let targetIdx = p.payments.findIndex(m => m.reported && !m.isPaid);
+            if (targetIdx === -1) targetIdx = p.payments.findIndex(m => !m.isPaid);
+            if (targetIdx === -1) targetIdx = totalMonths - 1; // กรณีจ่ายครบหมดแล้ว
+
+            const displayMonth = targetIdx + 1;
             const paidCount = p.payments.filter(m => m.isPaid).length;
-            const nextMonth = paidCount < totalMonths ? paidCount + 1 : totalMonths; // งวดถัดไปที่จะต้องจ่าย
             const percent = Math.round((paidCount / totalMonths) * 100);
-            const reported = p.payments.some(m => m.reported && !m.isPaid);
+            const isReported = p.payments.some(m => m.reported && !m.isPaid);
 
             return `
                 <div class="flex items-center gap-2">
-                    <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${reported ? 'report-pending' : ''}">
+                    <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-end mb-2">
-                                <div class="font-bold text-sm text-slate-700 truncate uppercase">${reported ? '🔔 ' : ''}${p.item}</div>
-                                <div class="text-[10px] font-bold text-pink-500">${nextMonth}/${totalMonths} งวด</div>
+                                <div class="font-bold text-sm text-slate-700 truncate">${isReported ? '🔔 ' : ''}${p.item}</div>
+                                <div class="text-[10px] font-bold text-pink-500">งวด ${displayMonth}/${totalMonths}</div>
                             </div>
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
                         </div>
@@ -250,14 +225,13 @@
             document.getElementById('mItemTitle').innerText = p.item;
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
             let totalPaid = 0;
-
             p.payments.forEach((m, i) => {
                 if(m.isPaid) totalPaid += m.amount;
                 const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
                 grid.innerHTML += `
                     <div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
                         <span class="text-[9px] font-bold w-10">งวด ${i+1}</span>
-                        <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none text-slate-800">
+                        <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none">
                         <button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button>
                     </div>`;
             });
@@ -267,29 +241,23 @@
 
         async function plusOneCategory() {
             if(!confirm(`ยืนยันเพิ่ม +1 งวดให้ทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
-            let count = 0;
             items.forEach(item => {
                 if(item.cat === currentTab) {
                     const nextIdx = item.payments.findIndex(m => !m.isPaid);
-                    if (nextIdx !== -1) {
-                        item.payments[nextIdx].isPaid = true;
-                        item.payments[nextIdx].reported = false;
-                        count++;
-                    }
+                    if (nextIdx !== -1) { item.payments[nextIdx].isPaid = true; item.payments[nextIdx].reported = false; }
                 }
             });
-            if(count > 0) { render(); await saveCloud(); alert(`อัปเดตเรียบร้อย ${count} รายการ`); }
+            render(); await saveCloud();
         }
 
         async function togglePay(id, idx) {
             const p = items.find(x => x.id === id);
             if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
-            else { p.payments[idx].reported = true; alert("แจ้งยอดเรียบร้อย 🔔"); }
+            else { p.payments[idx].reported = true; alert("แจ้งยอดงวดที่ " + (idx+1) + " เรียบร้อย 🔔"); }
             openModal(id); render(); await saveCloud();
         }
 
         function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0; saveCloud(); }
-
         async function addItem() {
             const n = document.getElementById('debtorName').value;
             const it = document.getElementById('itemName').value;
@@ -299,70 +267,61 @@
             items.push({ id: Date.now(), cat: document.getElementById('category').value, debtor: n, item: it, payments: Array.from({length: m}, () => ({isPaid: false, amount: parseFloat(a), reported: false})) });
             render(); await saveCloud();
         }
-
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
         async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {} }
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
         function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
-        // --- แก้ไข: PDF ให้โชว์เลขงวด 6/12 ให้ถูกต้อง ---
+        // --- แก้ไข: PDF ให้ดึงเลขงวดที่ถูกต้อง (งวดที่แจ้ง หรือ งวดล่าสุดที่ค้าง) ---
         function generatePDF(type) {
             const content = document.getElementById('pdf-content');
             const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
             const filtered = items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid));
             if (!filtered.length) return alert("ไม่มีข้อมูล");
 
-            let html = `<div style="font-family: 'Kanit', sans-serif; padding: 40px; background: #fff; color: #333;">
-                <h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 5px;">สรุปรายการค้างชำระ: ${type.toUpperCase()}</h1>
-                <p style="font-size: 12px; color: #666; margin-bottom: 25px;">วันที่ออกเอกสาร: ${today}</p>`;
+            let html = `<div style="font-family: 'Kanit', sans-serif; padding: 40px; background: #fff;">
+                <h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px;">รายการค้างชำระ: ${type.toUpperCase()}</h1>
+                <p style="font-size: 12px; color: #666;">ประจำวันที่: ${today}</p>`;
 
             const grouped = filtered.reduce((acc, curr) => { if (!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
             
             for (const name in grouped) {
                 let total = 0;
-                html += `<div style="margin-top: 25px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                    <div style="background: #f9f9f9; padding: 12px 20px; font-weight: bold; border-bottom: 1px solid #eee;">คุณ${name}</div>
+                html += `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden;">
+                    <div style="background: #f5f5f5; padding: 10px 15px; font-weight: bold; border-bottom: 1px solid #ddd;">คุณ${name}</div>
                     <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="background: #fff; text-align: left; font-size: 11px; color: #888;">
-                            <th style="padding: 12px 20px;">รายการ</th>
-                            <th style="padding: 12px 20px; text-align: center;">งวดที่</th>
-                            <th style="padding: 12px 20px; text-align: right;">ยอดเรียกเก็บ</th>
+                        <tr style="background: #fafafa; font-size: 11px; text-align: left;">
+                            <th style="padding: 10px 15px;">รายการ</th>
+                            <th style="padding: 10px 15px; text-align: center;">งวดที่</th>
+                            <th style="padding: 10px 15px; text-align: right;">ยอดเงิน</th>
                         </tr>`;
                 
                 grouped[name].forEach(item => {
-                    const paidCount = item.payments.filter(m => m.isPaid).length;
-                    const nextIdx = item.payments.findIndex(p => !p.isPaid);
-                    const nextMonth = nextIdx + 1;
-                    const amount = item.payments[nextIdx].amount;
+                    // Logic เดียวกับหน้า List: หางวดที่ Reported ก่อน ถ้าไม่มีเอางวดแรกที่ค้าง
+                    let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
+                    if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
+                    
+                    const monthLabel = `${targetIdx + 1}/${item.payments.length}`;
+                    const amount = item.payments[targetIdx].amount;
                     total += amount;
 
-                    html += `<tr style="border-bottom: 1px solid #eee; font-size: 14px;">
-                        <td style="padding: 12px 20px;">${item.item}</td>
-                        <td style="padding: 12px 20px; text-align: center; color: #AD1457; font-weight: bold;">${nextMonth}/${item.payments.length}</td>
-                        <td style="padding: 12px 20px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
+                    html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
+                        <td style="padding: 10px 15px;">${item.item}</td>
+                        <td style="padding: 10px 15px; text-align: center; font-weight: bold; color: #AD1457;">${monthLabel}</td>
+                        <td style="padding: 10px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
                     </tr>`;
                 });
 
                 html += `</table>
-                    <div style="padding: 15px 20px; text-align: right; background: #FFFDE7; color: #333;">
-                        <span style="font-size: 12px; margin-right: 10px;">ยอดรวมที่ต้องชำระ:</span>
-                        <b style="font-size: 18px; color: #2563eb;">฿${Math.round(total).toLocaleString()}</b>
+                    <div style="padding: 12px 15px; text-align: right; background: #FFFDE7; font-weight: bold;">
+                        รวมทั้งสิ้น: <span style="color: #2563eb; font-size: 16px;">฿${Math.round(total).toLocaleString()}</span>
                     </div>
                 </div>`;
             }
-            
-            html += `<p style="text-align: center; margin-top: 50px; color: #bbb; font-size: 10px; letter-spacing: 1px;">GENERATE BY DEBT CLOUD SYSTEM</p></div>`;
-            
+            html += `<p style="text-align: center; margin-top: 30px; color: #aaa; font-size: 9px;">DEBT CLOUD SYSTEM</p></div>`;
             content.innerHTML = html;
-            const opt = { 
-                margin: 0.3, 
-                filename: `Debt-${type}-${new Date().getTime()}.pdf`, 
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 3, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
-            };
-            html2pdf().set(opt).from(content).save();
+            html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, jsPDF: { format: 'a4' } }).from(content).save();
         }
 
         window.onload = loadData;
