@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Debt Cloud Pro - Fixed & Tabs</title>
+    <title>Debt Cloud Pro - Ultimate iPad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .page-section { display: none; }
         .page-section.active { display: block; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -16,63 +16,67 @@
         .nav-item.active { color: #10b981; }
         .tab-btn { transition: 0.2s; border-bottom: 3px solid transparent; }
         .tab-btn.active { border-color: #10b981; color: #10b981; font-weight: bold; }
-        .report-pending { background-color: #fffbeb !important; border-left: 4px solid #f59e0b !important; }
+        .report-pending { background-color: #fffbeb !important; border-left: 5px solid #f59e0b !important; }
+        /* แก้ไขการแสดงผล Modal บน iPad */
+        .modal-animate { transition: all 0.2s ease-out; transform: scale(0.95); opacity: 0; }
+        .modal-active { transform: scale(1); opacity: 1; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-28">
+<body class="bg-slate-50 min-h-screen pb-32">
 
     <div class="sticky top-0 bg-white/90 backdrop-blur-md border-b z-40 p-4 flex justify-between items-center shadow-sm">
         <div>
             <h1 class="font-bold text-slate-800 text-lg" id="currentTitle">สรุปยอดเงิน</h1>
-            <p id="userStatus" class="text-[10px] font-bold text-emerald-500 uppercase">โหมดผู้เข้าชม</p>
+            <p id="userStatus" class="text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">โหมดผู้เข้าชม</p>
         </div>
         <div class="flex gap-1">
-            <button onclick="generatePDF('shopee')" class="bg-orange-50 text-orange-600 px-3 py-1.5 rounded-xl text-[10px] font-bold border border-orange-100">PDF Shopee</button>
-            <button onclick="generatePDF('loan')" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl text-[10px] font-bold border border-blue-100">PDF เงินกู้</button>
-            <button onclick="loginAdmin()" id="adminLock" class="bg-white border p-2 rounded-xl ml-1">🔒</button>
+            <button onclick="generatePDF('shopee')" class="bg-orange-50 text-orange-600 px-3 py-2 rounded-xl text-[10px] font-bold border border-orange-100 active:scale-90 transition">PDF Shopee</button>
+            <button onclick="generatePDF('loan')" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-xl text-[10px] font-bold border border-blue-100 active:scale-90 transition">PDF เงินกู้</button>
+            <button onclick="loginAdmin()" id="adminLock" class="bg-white border p-2 rounded-xl ml-1 shadow-sm active:bg-slate-100">🔒</button>
         </div>
     </div>
 
-    <section id="page-home" class="page-section active p-4 text-center">
-        <div class="bg-emerald-500 rounded-[2.5rem] p-8 text-white shadow-lg mb-6">
-            <p class="opacity-80 text-xs font-bold uppercase mb-1">ยอดต้องเก็บเดือนนี้ (รวม)</p>
-            <div id="totalMonthlyAmount" class="text-4xl font-black italic">฿0</div>
+    <section id="page-home" class="page-section active p-4">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2.5rem] p-8 text-white shadow-xl mb-6 text-center">
+            <p class="opacity-80 text-xs font-bold uppercase mb-1 tracking-widest">ยอดต้องเก็บเดือนนี้ (รวมทุกหมวด)</p>
+            <div id="totalMonthlyAmount" class="text-5xl font-black italic">฿0</div>
         </div>
-        <div id="monthlySummaryArea" class="grid grid-cols-1 gap-3 text-left"></div>
+        <h3 class="font-bold text-slate-400 mb-3 px-2 text-[10px] uppercase tracking-[0.2em]">รายการแยกตามบุคคล</h3>
+        <div id="monthlySummaryArea" class="space-y-3"></div>
     </section>
 
     <section id="page-active" class="page-section p-4">
-        <div id="adminPanel" class="hidden mb-6 bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl">
+        <div id="adminPanel" class="hidden mb-6 bg-slate-900 text-white p-6 rounded-[2.5rem] shadow-2xl animate-in zoom-in duration-300">
              <div id="nameTagsArea" class="flex flex-wrap gap-2 mb-4"></div>
              <div class="space-y-3">
-                 <input type="text" id="debtorName" placeholder="ชื่อ" class="w-full p-3 rounded-xl text-slate-800 outline-none">
-                 <input type="text" id="itemName" placeholder="รายการ" class="w-full p-3 rounded-xl text-slate-800 outline-none">
+                 <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="w-full p-4 rounded-2xl text-slate-800 outline-none border-none shadow-inner">
+                 <input type="text" id="itemName" placeholder="รายการสินค้า/กู้" class="w-full p-4 rounded-2xl text-slate-800 outline-none border-none shadow-inner">
                  <div class="flex gap-2">
-                    <select id="category" class="w-24 p-3 rounded-xl text-slate-800 outline-none">
+                    <select id="category" class="w-28 p-4 rounded-2xl text-slate-800 outline-none font-bold">
                         <option value="shopee">Shopee</option>
                         <option value="loan">เงินกู้</option>
                     </select>
-                    <input type="number" id="defaultAmount" placeholder="ยอด/งวด" class="flex-1 p-3 rounded-xl text-slate-800 outline-none font-bold">
-                    <select id="totalMonths" class="w-20 p-3 rounded-xl text-slate-800 outline-none">
+                    <input type="number" id="defaultAmount" placeholder="฿/งวด" class="flex-1 p-4 rounded-2xl text-slate-800 outline-none font-bold">
+                    <select id="totalMonths" class="w-20 p-4 rounded-2xl text-slate-800 outline-none font-bold text-center">
                         <option value="1">1</option><option value="3">3</option><option value="6">6</option><option value="12" selected>12</option>
                     </select>
                  </div>
-                 <button onclick="addItem()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition">บันทึกข้อมูล</button>
+                 <button onclick="addItem()" class="w-full bg-emerald-500 text-white font-bold py-5 rounded-2xl shadow-lg active:scale-[0.97] transition-all text-lg mt-2">บันทึกข้อมูลลง Cloud</button>
              </div>
         </div>
 
-        <div class="flex border-b mb-4 bg-white rounded-t-2xl overflow-hidden shadow-sm">
-            <button onclick="switchTab('shopee')" id="tab-shopee" class="tab-btn active flex-1 py-4 text-sm font-bold uppercase">🛒 Shopee</button>
-            <button onclick="switchTab('loan')" id="tab-loan" class="tab-btn flex-1 py-4 text-sm font-bold uppercase">💵 เงินกู้</button>
+        <div class="flex bg-white rounded-2xl p-1 shadow-sm border mb-4">
+            <button onclick="switchTab('shopee')" id="tab-shopee" class="tab-btn active flex-1 py-3 text-xs font-bold rounded-xl transition-all">🛒 SHOPEE</button>
+            <button onclick="switchTab('loan')" id="tab-loan" class="tab-btn flex-1 py-3 text-xs font-bold rounded-xl transition-all">💵 เงินกู้</button>
         </div>
 
         <div id="payAllBtnArea" class="hidden mb-4">
-            <button onclick="payAllNextMonth()" class="w-full bg-white border-2 border-emerald-500 text-emerald-600 font-bold py-3 rounded-2xl shadow-sm active:scale-95 transition flex items-center justify-center gap-2">
+            <button onclick="payAllNextMonth()" class="w-full bg-emerald-50 border-2 border-emerald-500 text-emerald-700 font-bold py-4 rounded-2xl shadow-sm active:scale-[0.98] transition flex items-center justify-center gap-2">
                 ✅ ยืนยันจ่ายทุกคนในหน้านี้ (+1 งวด)
             </button>
         </div>
 
-        <div id="activeListContent" class="space-y-6">
+        <div id="activeListContent" class="space-y-6 pb-10">
             </div>
     </section>
 
@@ -80,29 +84,33 @@
         <div id="historyList" class="space-y-2"></div>
     </section>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t flex h-20 pb-4 shadow-2xl z-50">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t flex h-24 pb-6 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] z-50">
         <button onclick="switchPage('home', 'สรุปยอดเงิน')" class="nav-item active" id="nav-home">
-            <span class="text-2xl">🏠</span><span>สรุป</span>
+            <span class="text-3xl mb-1">🏠</span><span>สรุป</span>
         </button>
         <button onclick="switchPage('active', 'รายการค้าง')" class="nav-item" id="nav-active">
-            <span class="text-2xl">📝</span><span>รายการ</span>
+            <span class="text-3xl mb-1">📝</span><span>รายการ</span>
         </button>
         <button onclick="switchPage('history', 'จบการผ่อน')" class="nav-item" id="nav-history">
-            <span class="text-2xl">✅</span><span>ประวัติ</span>
+            <span class="text-3xl mb-1">✅</span><span>ประวัติ</span>
         </button>
     </nav>
 
-    <div id="detailModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-[2.5rem] max-w-md w-full p-7 shadow-2xl transition-all scale-95 opacity-0 duration-200" id="modalContent">
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div class="bg-white rounded-[3rem] max-w-md w-full p-8 shadow-2xl modal-animate" id="modalContent">
             <div class="flex justify-between items-start mb-6">
-                <div><h3 id="mDebtor" class="text-2xl font-black text-slate-800"></h3><p id="mItem" class="text-sm text-slate-400 italic"></p></div>
-                <button onclick="closeModal()" class="text-slate-300 text-4xl">&times;</button>
+                <div>
+                    <h3 id="mDebtor" class="text-2xl font-black text-slate-800"></h3>
+                    <p id="mItem" class="text-sm text-slate-400 italic font-medium"></p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-300 text-5xl leading-none">&times;</button>
             </div>
-            <div id="monthGrid" class="space-y-2 max-h-[45vh] overflow-y-auto pr-2"></div>
-            <div class="mt-6 p-5 bg-slate-50 rounded-3xl flex justify-between items-center border border-slate-100">
-                <span class="font-bold text-slate-500">จ่ายรวมแล้ว:</span><span id="mTotalAmount" class="text-2xl font-black text-emerald-600 italic">฿0</span>
+            <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar"></div>
+            <div class="mt-6 p-6 bg-slate-50 rounded-[2rem] flex justify-between items-center border border-slate-100 shadow-inner">
+                <span class="font-bold text-slate-400">จ่ายรวมไปแล้ว:</span>
+                <span id="mTotalAmount" class="text-3xl font-black text-emerald-600 italic">฿0</span>
             </div>
-            <button onclick="closeModal()" class="w-full mt-4 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg">ตกลง</button>
+            <button onclick="closeModal()" class="w-full mt-5 bg-slate-900 text-white py-5 rounded-2xl font-bold shadow-xl active:scale-95 transition text-lg">ปิดหน้าต่าง</button>
         </div>
     </div>
 
@@ -118,9 +126,10 @@
         async function loadData() {
             try {
                 const res = await fetch(SCRIPT_URL);
-                const rawData = await res.text();
-                if (rawData) { items = JSON.parse(rawData); render(); }
-            } catch (e) { console.error(e); }
+                const data = await res.json();
+                items = data || [];
+                render();
+            } catch (e) { console.error("Load Error:", e); }
         }
 
         function switchPage(pageId, title) {
@@ -129,6 +138,7 @@
             document.getElementById('page-' + pageId).classList.add('active');
             document.getElementById('nav-' + pageId).classList.add('active');
             document.getElementById('currentTitle').innerText = title;
+            window.scrollTo({ top: 0, behavior: 'instant' });
         }
 
         function switchTab(tab) {
@@ -144,48 +154,66 @@
             const summaryArea = document.getElementById('monthlySummaryArea');
             
             activeContent.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
-            let totalMonthAll = 0;
+            
+            // 1. แยกข้อมูลตามสถานะ
+            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid));
+            const completedItems = items.filter(i => i.payments.every(p => p.isPaid));
 
-            // กรองข้อมูลแยก หมวด/ประวัติ
-            const activeFiltered = items.filter(i => i.cat === currentTab && i.payments.some(p => !p.isPaid));
-            const historyFiltered = items.filter(i => i.payments.every(p => p.isPaid));
-
-            // แยกกลุ่มรายคนในหน้า Active
-            const groups = activeFiltered.reduce((acc, item) => {
+            // 2. กรองข้อมูลตาม Tab ที่เลือก (Shopee/Loan)
+            const tabItems = activeItems.filter(i => i.cat === currentTab);
+            
+            // 3. จัดกลุ่มคนใน Tab
+            const groups = tabItems.reduce((acc, item) => {
                 if (!acc[item.debtor]) acc[item.debtor] = [];
                 acc[item.debtor].push(item);
                 return acc;
             }, {});
 
+            // 4. แสดงผลหน้า Active (แยกคน + เรียงเดือนมากไปน้อย)
             for (const name in groups) {
-                // เรียงเดือนมากไปน้อย
                 groups[name].sort((a,b) => b.payments.filter(p=>!p.isPaid).length - a.payments.filter(p=>!p.isPaid).length);
                 
-                let groupHtml = `<div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-4">
-                    <h3 class="font-black text-slate-800 border-b pb-2 mb-3">👤 ${name}</h3><div class="space-y-3">`;
-                groups[name].forEach(p => {
-                    groupHtml += renderCard(p);
-                    const next = p.payments.find(m => !m.isPaid);
-                    if (next) totalMonthAll += next.amount;
-                });
+                let groupHtml = `<div class="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 mb-6">
+                    <h3 class="font-black text-slate-800 text-lg border-b pb-3 mb-4 flex justify-between items-center">
+                        <span>👤 คุณ${name}</span>
+                        <span class="text-[9px] bg-slate-100 px-2 py-1 rounded-lg text-slate-400 font-bold">${groups[name].length} รายการ</span>
+                    </h3>
+                    <div class="space-y-4">`;
+                groups[name].forEach(p => groupHtml += renderCard(p));
                 groupHtml += `</div></div>`;
                 activeContent.innerHTML += groupHtml;
             }
 
-            historyFiltered.forEach(p => historyList.innerHTML += renderCard(p));
+            // 5. แสดงผลหน้าประวัติ
+            completedItems.forEach(p => historyList.innerHTML += renderCard(p));
 
-            // สรุปยอดรวม (ดึงจากทุกหมวดที่ค้าง)
-            const globalTotal = items.reduce((s, item) => {
+            // 6. หน้า Dashboard (ยอดรวมทุกหมวด)
+            let grandTotal = 0;
+            items.forEach(item => {
                 const next = item.payments.find(m => !m.isPaid);
-                return s + (next ? next.amount : 0);
-            }, 0);
-            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(globalTotal).toLocaleString()}`;
+                if (next) grandTotal += next.amount;
+            });
+            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
             
-            updateDashboardSummary();
+            // รายคนใน Dashboard
+            const summaryGroups = activeItems.reduce((acc, curr) => {
+                const next = curr.payments.find(p => !p.isPaid);
+                if (next) acc[curr.debtor] = (acc[curr.debtor] || 0) + next.amount;
+                return acc;
+            }, {});
+            for (const name in summaryGroups) {
+                summaryArea.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-emerald-50 shadow-sm flex justify-between items-center transition active:scale-95">
+                        <span class="font-bold text-slate-600">คุณ${name}</span>
+                        <span class="font-black text-emerald-600 text-lg italic">฿${Math.round(summaryGroups[name]).toLocaleString()}</span>
+                    </div>`;
+            }
+
             renderNameTags();
             if(isAdmin) document.getElementById('payAllBtnArea').classList.remove('hidden');
         }
 
+        // ⭐ แก้ไขปุ่มลบแยก Layer (Fixed iPad Delete)
         function renderCard(p) {
             const paid = p.payments.filter(m => m.isPaid).length;
             const percent = Math.round((paid / p.totalMonths) * 100);
@@ -193,41 +221,35 @@
             const isCompleted = paid === p.totalMonths;
 
             return `
-                <div onclick="openModal(${p.id})" class="flex items-center justify-between p-3 rounded-2xl border border-slate-50 shadow-sm transition active:scale-95 bg-white ${hasReport && !isCompleted ? 'report-pending' : ''}">
-                    <div class="flex-1">
-                        <div class="font-bold text-slate-700 text-sm">${hasReport && !isCompleted ? '🚩 ' : ''}${p.item}</div>
-                        <div class="text-[9px] text-slate-400">เหลือ ${p.totalMonths - paid} งวด</div>
-                    </div>
-                    <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div onclick="openModal(${p.id})" class="flex items-center justify-between p-4 rounded-2xl border border-slate-50 bg-white shadow-sm active:scale-[0.98] transition cursor-pointer ${hasReport && !isCompleted ? 'report-pending' : ''}">
+                        <div class="flex-1 pr-10">
+                            <div class="font-bold text-slate-700 text-sm leading-tight">${hasReport && !isCompleted ? '🚩 ' : ''}${p.item}</div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] font-bold ${p.cat==='shopee'?'text-orange-400':'text-blue-500'} uppercase">${p.cat}</span>
+                                <span class="text-[9px] text-slate-300 font-bold">เหลือ ${p.totalMonths - paid} งวด</span>
+                            </div>
+                        </div>
                         <div class="text-right">
                             <div class="text-xs font-black text-slate-600 italic">${percent}%</div>
-                            <div class="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${percent}%"></div></div>
+                            <div class="w-12 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-emerald-500" style="width:${percent}%"></div>
+                            </div>
                         </div>
-                        ${isAdmin ? `<button onclick="event.stopPropagation(); deleteItem(${p.id})" class="text-red-500 text-xl p-1">🗑️</button>` : ''}
                     </div>
+                    ${isAdmin ? `
+                    <button onclick="event.stopPropagation(); deleteItem(${p.id})" 
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl active:bg-red-500 active:text-white transition-all z-30 border border-red-100">
+                        <span class="text-lg">🗑️</span>
+                    </button>
+                    ` : ''}
                 </div>`;
-        }
-
-        function updateDashboardSummary() {
-            const area = document.getElementById('monthlySummaryArea');
-            const summaryGroups = items.reduce((acc, curr) => {
-                const next = curr.payments.find(p => !p.isPaid);
-                if (next) acc[curr.debtor] = (acc[curr.debtor] || 0) + next.amount;
-                return acc;
-            }, {});
-            for (const name in summaryGroups) {
-                area.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl border border-emerald-50 shadow-sm flex justify-between items-center">
-                        <span class="font-bold text-slate-600">คุณ${name}</span>
-                        <span class="font-black text-emerald-600">฿${Math.round(summaryGroups[name]).toLocaleString()}</span>
-                    </div>`;
-            }
         }
 
         function renderNameTags() {
             const area = document.getElementById('nameTagsArea');
             const names = [...new Set(items.map(i => i.debtor))];
-            area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 cursor-pointer active:bg-emerald-500 active:text-white">${n}</div>`).join('');
+            area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-4 py-2 rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 shadow-sm active:bg-emerald-500 active:text-white transition">${n}</div>`).join('');
         }
 
         async function addItem() {
@@ -236,7 +258,7 @@
             const item = document.getElementById('itemName').value.trim();
             const amt = document.getElementById('defaultAmount').value;
             const months = parseInt(document.getElementById('totalMonths').value);
-            if(!name || !item || !amt) return alert("กรอกข้อมูลให้ครบ");
+            if(!name || !item || !amt) return alert("กรอกข้อมูลไม่ครบครับ!");
 
             items.push({
                 id: Date.now(), cat: document.getElementById('category').value,
@@ -245,29 +267,25 @@
             });
             render(); await saveCloud();
             document.getElementById('itemName').value = ''; document.getElementById('defaultAmount').value = '';
+            alert("บันทึกสำเร็จ ✅");
         }
 
-        // ⭐ ฟีเจอร์ จ่ายทุกคนในหมวดนี้ +1 งวด
         async function payAllNextMonth() {
             if(!isAdmin || !confirm(`ยืนยันการชำระเงิน +1 งวด สำหรับทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
             items.forEach(item => {
                 if(item.cat === currentTab) {
-                    const nextIndex = item.payments.findIndex(p => !p.isPaid);
-                    if(nextIndex !== -1) {
-                        item.payments[nextIndex].isPaid = true;
-                        item.payments[nextIndex].reported = false;
-                    }
+                    const next = item.payments.findIndex(p => !p.isPaid);
+                    if(next !== -1) { item.payments[next].isPaid = true; item.payments[next].reported = false; }
                 }
             });
             render(); await saveCloud();
-            alert("อัปเดตสถานะสำเร็จ!");
+            alert("อัปเดตเรียบร้อย!");
         }
 
         async function deleteItem(id) {
-            if(isAdmin && confirm("ต้องการลบรายการนี้ใช่ไหม? 🗑️")) {
+            if(confirm("ยืนยันลบรายการนี้ถาวร? 🗑️")) {
                 items = items.filter(x => x.id !== id);
-                render();
-                await saveCloud();
+                render(); await saveCloud();
             }
         }
 
@@ -277,31 +295,35 @@
             document.getElementById('mItem').innerText = p.item;
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
             let sum = 0;
-            const modal = document.getElementById('detailModal');
-            const content = document.getElementById('modalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => { content.classList.replace('opacity-0', 'opacity-100'); content.classList.replace('scale-95', 'scale-100'); }, 10);
+            
+            document.getElementById('detailModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modalContent').classList.add('modal-active'), 10);
 
             p.payments.forEach((m, i) => {
                 if(m.isPaid) sum += m.amount;
-                const statusColor = m.isPaid ? 'bg-emerald-50 border-emerald-100' : (m.reported ? 'bg-amber-50 border-amber-200' : 'bg-slate-50');
-                grid.innerHTML += `<div class="flex items-center gap-2 p-3 rounded-2xl border ${statusColor}">
-                    <span class="text-[9px] w-12 font-bold text-slate-400 italic">งวด ${i+1}</span>
-                    <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="items.find(x=>x.id===${p.id}).payments[${i}].amount=parseFloat(this.value)" class="flex-1 bg-transparent text-right font-bold text-slate-700 outline-none">
-                    ${!m.isPaid && !isAdmin ? `<button onclick="reportPay(${p.id},${i})" class="text-[9px] font-bold px-2 py-1 rounded-lg ${m.reported?'bg-orange-500 text-white':'bg-slate-200 text-slate-500'}">${m.reported?'แจ้งแล้ว':'แจ้งจ่าย'}</button>`:''}
-                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-10 h-10 rounded-xl flex items-center justify-center transition ${m.isPaid?'bg-emerald-500 text-white shadow-md':'bg-white text-slate-200 border'}">${m.isPaid?'✓':''}</button>
+                const status = m.isPaid ? 'bg-emerald-50 border-emerald-100' : (m.reported ? 'bg-amber-50 border-amber-200' : 'bg-slate-50');
+                grid.innerHTML += `<div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
+                    <span class="text-[10px] w-12 font-bold text-slate-400 italic">งวด ${i+1}</span>
+                    <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updatePaymentAmt(${p.id},${i},this.value)" class="flex-1 bg-transparent text-right font-black text-slate-700 outline-none">
+                    ${!m.isPaid && !isAdmin ? `<button onclick="reportPay(${p.id},${i})" class="text-[9px] font-bold px-3 py-2 rounded-xl ${m.reported?'bg-orange-500 text-white':'bg-slate-200 text-slate-500'}">${m.reported?'แจ้งแล้ว':'แจ้งจ่าย'}</button>`:''}
+                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${m.isPaid?'bg-emerald-500 text-white shadow-md':'bg-white text-slate-200 border'}">${m.isPaid?'✓':''}</button>
                 </div>`;
             });
             document.getElementById('mTotalAmount').innerText = `฿${Math.round(sum).toLocaleString()}`;
         }
 
+        function updatePaymentAmt(id, idx, val) { items.find(x=>x.id===id).payments[idx].amount = parseFloat(val) || 0; }
         async function reportPay(id, idx) { items.find(x => x.id === id).payments[idx].reported = true; openModal(id); render(); await saveCloud(); }
         function togglePay(id, idx) { const p = items.find(x => x.id === id); p.payments[idx].isPaid = !p.payments[idx].isPaid; if(p.payments[idx].isPaid) p.payments[idx].reported = false; openModal(id); }
         async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch(e){} }
-        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) saveCloud(); }
+        
+        function closeModal() {
+            document.getElementById('modalContent').classList.remove('modal-active');
+            setTimeout(() => { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) saveCloud(); }, 200);
+        }
 
         function loginAdmin() {
-            const p = prompt("รหัสผ่าน:");
+            const p = prompt("รหัสผ่านผู้ดูแล:");
             if(p === ADMIN_PASS) {
                 isAdmin = true;
                 document.getElementById('adminPanel').classList.remove('hidden');
@@ -314,23 +336,34 @@
 
         function generatePDF(type) {
             const area = document.getElementById('pdf-content');
-            let html = `<div style="font-family: 'Kanit'; padding: 30px;"><h1 style="text-align: center; color: ${type==='shopee'?'#f97316':'#2563eb'};">สรุปยอดค้างชำระ: ${type.toUpperCase()}</h1><p style="text-align: center; font-size: 12px; color: #666;">วันที่: ${new Date().toLocaleDateString('th-TH')}</p><br>`;
+            const color = type === 'shopee' ? '#f97316' : '#3b82f6';
+            let html = `<div style="font-family: 'Kanit'; padding: 30px;"><h1 style="text-align: center; color: ${color}; font-size: 24px;">รายการค้างชำระ: ${type.toUpperCase()}</h1><p style="text-align: center; font-size: 12px; color: #666; margin-bottom: 20px;">อัปเดต ณ วันที่: ${new Date().toLocaleDateString('th-TH')}</p>`;
+            
             const groups = items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid)).reduce((acc, curr) => {
                 if(!acc[curr.debtor]) acc[curr.debtor] = [];
                 acc[curr.debtor].push(curr);
                 return acc;
             }, {});
+
             if(Object.keys(groups).length === 0) return alert("ไม่มีข้อมูลในหมวดนี้");
+
             for (const name in groups) {
                 let pTotal = 0;
-                html += `<div style="margin-bottom: 25px; border: 1px solid #eee; border-radius: 10px; overflow: hidden; break-inside: avoid;"><div style="background: ${type==='shopee'?'#f97316':'#2563eb'}; color: white; padding: 10px 15px; font-weight: bold;">คุณ${name}</div><table style="width: 100%; border-collapse: collapse; font-size: 13px;"><thead><tr style="background: #f8fafc;"><th style="padding: 10px; text-align: left;">รายการ</th><th style="padding: 10px; text-align: center;">งวด</th><th style="padding: 10px; text-align: right;">จ่ายแล้ว</th></tr></thead><tbody>`;
+                html += `<div style="margin-bottom: 30px; border: 2px solid ${color}; border-radius: 15px; overflow: hidden; break-inside: avoid;">
+                    <div style="background: ${color}; color: white; padding: 12px 20px; font-weight: bold; font-size: 16px;">คุณ${name}</div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #eee;">
+                            <th style="padding: 12px; text-align: left;">รายการ</th>
+                            <th style="padding: 12px; text-align: center;">งวดที่จ่าย</th>
+                            <th style="padding: 12px; text-align: right;">จ่ายสะสมแล้ว</th>
+                        </tr>`;
                 groups[name].forEach(item => {
                     const paid = item.payments.filter(m => m.isPaid).length;
                     const sumPaid = item.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
                     pTotal += sumPaid;
-                    html += `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 10px;">${item.item}</td><td style="padding: 10px; text-align: center;">${paid}/${item.totalMonths}</td><td style="padding: 10px; text-align: right;">฿${Math.round(sumPaid).toLocaleString()}</td></tr>`;
+                    html += `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding: 12px;">${item.item}</td><td style="padding: 12px; text-align: center;">${paid}/${item.totalMonths}</td><td style="padding: 12px; text-align: right;">฿${Math.round(sumPaid).toLocaleString()}</td></tr>`;
                 });
-                html += `</tbody></table><div style="padding: 10px; text-align: right; background: #fdfdfd; font-weight: bold;">รวมจ่ายไปแล้ว: ฿${Math.round(pTotal).toLocaleString()}</div></div>`;
+                html += `</table><div style="padding: 15px; text-align: right; background: #fdfdfd; font-weight: bold; font-size: 15px; color: ${color};">รวมจ่ายแล้วทั้งหมด: ฿${Math.round(pTotal).toLocaleString()}</div></div>`;
             }
             area.innerHTML = html + '</div>';
             html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, html2canvas: { scale: 3 }, jsPDF: { unit: 'in', format: 'a4' } }).from(area).save();
