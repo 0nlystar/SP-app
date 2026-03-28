@@ -3,109 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debt Manager (Share Mode)</title>
+    <title>Debt Cloud Manager Pro (Separate Batch)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Kanit', sans-serif; }
+        .admin-only { display: none; }
         .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 13px; }
         .pdf-table th, .pdf-table td { border: 1px solid #cbd5e1; padding: 10px; }
-        .admin-only { display: none; } /* ซ่อนส่วนแอดมินไว้ก่อน */
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen pb-10">
+<body class="bg-gray-50 min-h-screen pb-20">
 
     <div class="max-w-[1600px] mx-auto p-4 md:p-6">
         <header class="mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-3xl shadow-sm gap-4 border-b-4 border-emerald-500">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">ระบบติดตามหนี้ (Cloud)</h1>
-                <p id="userStatus" class="text-emerald-600 text-sm font-bold">โหมด: ผู้เข้าชม (ดูได้อย่างเดียว)</p>
+                <h1 class="text-2xl font-bold text-gray-800">ระบบติดตามหนี้ (Cloud Sync)</h1>
+                <p id="userStatus" class="text-emerald-600 text-sm font-bold italic">โหมด: ผู้เข้าชม (ดูได้อย่างเดียว)</p>
             </div>
             <div class="flex gap-2">
-                <button onclick="loginAdmin()" id="loginBtn" class="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black transition">🔑 เข้าระบบแอดมิน</button>
-                <button onclick="generatePDF('shopee')" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold">📥 PDF Shopee</button>
-                <button onclick="generatePDF('loan')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold">📥 PDF เงินกู้</button>
+                <button onclick="loginAdmin()" id="loginBtn" class="bg-gray-800 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black transition shadow-md">🔑 เข้าโหมดแอดมิน</button>
+                <button onclick="generatePDF('shopee')" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">📥 PDF Shopee</button>
+                <button onclick="generatePDF('loan')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md">📥 PDF เงินกู้</button>
             </div>
         </header>
 
         <div class="mb-8 bg-white p-6 rounded-3xl shadow-sm border border-emerald-100">
             <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <div class="w-2 h-6 bg-emerald-500 rounded-full"></div> ยอดที่ต้องเรียกเก็บเดือนนี้
+                <div class="w-2 h-6 bg-emerald-500 rounded-full"></div> ยอดที่ต้องเรียกเก็บเดือนนี้ (รวม 2 หมวด)
             </h2>
             <div id="monthlySummaryArea" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
         </div>
 
-        <div class="admin-only bg-white p-5 rounded-3xl shadow-sm mb-8 border-2 border-emerald-500">
-            <h3 class="font-bold mb-3 text-emerald-700">➕ เพิ่มรายการใหม่ (Admin Only)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                <select id="category" class="border p-3 rounded-2xl bg-gray-50 outline-none"><option value="shopee">🛒 Shopee</option><option value="loan">💵 เงินกู้</option></select>
-                <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="border p-3 rounded-2xl bg-gray-50 outline-none">
-                <input type="text" id="itemName" placeholder="รายการสินค้า" class="border p-3 rounded-2xl bg-gray-50 outline-none">
-                <select id="totalMonths" class="border p-3 rounded-2xl bg-gray-50 outline-none"><option value="12">12 เดือน</option><option value="6">6 เดือน</option><option value="24">24 เดือน</option></select>
-                <button onclick="addItem()" class="bg-emerald-500 text-white font-bold rounded-2xl py-3 hover:bg-emerald-600">บันทึกลง Cloud</button>
+        <div id="adminArea" class="admin-only space-y-4 mb-8">
+            <div class="bg-white p-6 rounded-3xl shadow-md border-2 border-emerald-500">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <h3 class="font-bold text-emerald-700">➕ จัดการข้อมูล (Admin Only)</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="payAllNextMonth('shopee')" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-orange-600 shadow-md transition-all">✅ จ่าย Shopee ทุกคน</button>
+                        <button onclick="payAllNextMonth('loan')" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-md transition-all">✅ จ่ายเงินกู้ทุกคน</button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <select id="category" class="border p-3 rounded-2xl bg-gray-50 outline-none">
+                        <option value="shopee">🛒 Shopee</option>
+                        <option value="loan">💵 เงินกู้</option>
+                    </select>
+                    <input type="text" id="debtorName" placeholder="ชื่อลูกหนี้" class="border p-3 rounded-2xl bg-gray-50 outline-none">
+                    <input type="text" id="itemName" placeholder="รายการสินค้า" class="border p-3 rounded-2xl bg-gray-50 outline-none">
+                    <select id="totalMonths" class="border p-3 rounded-2xl bg-gray-50 outline-none">
+                        <option value="3">3 เดือน</option>
+                        <option value="6">6 เดือน</option>
+                        <option value="12" selected>12 เดือน</option>
+                        <option value="24">24 เดือน</option>
+                    </select>
+                    <button onclick="addItem()" class="bg-emerald-500 text-white font-bold rounded-2xl py-3 hover:bg-emerald-600 shadow-lg shadow-emerald-100">เพิ่มข้อมูลลง Cloud</button>
+                </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white rounded-3xl shadow-sm border border-orange-100 overflow-hidden">
-                <div class="bg-orange-500 p-4 text-white font-bold">🛒 รายการ Shopee</div>
+                <div class="bg-orange-500 p-4 text-white font-bold flex justify-between items-center">
+                    <span>🛒 รายการ Shopee</span>
+                </div>
                 <div class="overflow-x-auto"><table class="w-full text-sm"><tbody id="shopeeTableBody"></tbody></table></div>
             </div>
             <div class="bg-white rounded-3xl shadow-sm border border-blue-100 overflow-hidden">
-                <div class="bg-blue-600 p-4 text-white font-bold">💵 รายการ เงินกู้</div>
+                <div class="bg-blue-600 p-4 text-white font-bold flex justify-between items-center">
+                    <span>💵 รายการ เงินกู้</span>
+                </div>
                 <div class="overflow-x-auto"><table class="w-full text-sm"><tbody id="loanTableBody"></tbody></table></div>
             </div>
         </div>
     </div>
 
     <div id="detailModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-3xl max-w-md w-full p-6">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h3 id="mDebtor" class="text-xl font-bold"></h3>
+                <h3 id="mDebtor" class="text-xl font-bold text-gray-800"></h3>
                 <button onclick="closeModal()" class="text-gray-400 text-3xl">&times;</button>
             </div>
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
-            <div class="mt-6 p-4 bg-green-50 rounded-2xl flex justify-between items-center font-bold text-green-700">
-                <span>จ่ายแล้วรวม:</span><span id="mTotalAmount" class="text-xl">฿0</span>
+            <div class="mt-6 p-4 bg-green-50 rounded-2xl flex justify-between items-center font-bold text-green-700 border border-green-100">
+                <span>จ่ายรวมแล้ว:</span><span id="mTotalAmount" class="text-xl">฿0</span>
             </div>
-            <button onclick="closeModal()" id="saveModalBtn" class="w-full mt-4 bg-gray-800 text-white py-3 rounded-2xl font-bold">ปิดหน้าต่าง</button>
+            <button onclick="closeModal()" id="saveModalBtn" class="w-full mt-4 bg-gray-800 text-white py-3 rounded-2xl font-bold shadow-lg">ปิดหน้าต่าง</button>
         </div>
     </div>
 
     <div id="pdf-container" class="hidden"> <div id="pdf-content"></div> </div>
 
     <script>
-        // === ตั้งค่าตรงนี้ ===
+        // ==========================================
+        // 🛠 ตั้งค่า SCRIPT_URL และรหัสผ่านที่นี่
+        // ==========================================
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuoGoCZ0IisovMTtrJmbwqL4gS_mSIRYiPINPJPCmqCkDLjpm2IfUgDJ4s6ZgGwVHq/exec"; 
-        const ADMIN_PASS = "19141"; // รหัสผ่านสำหรับแก้ไข
-        // ==================
+        const ADMIN_PASS = "onlystar"; 
+        // ==========================================
 
         let items = [];
         let isAdmin = false;
 
         async function loadData() {
-            const res = await fetch(SCRIPT_URL);
-            items = await res.json();
-            render();
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const rawData = await res.text();
+                if (rawData) {
+                    items = JSON.parse(rawData);
+                    render();
+                }
+            } catch (e) { console.error("โหลดข้อมูลล้มเหลว", e); }
         }
 
         function loginAdmin() {
-            const pass = prompt("กรุณาใส่รหัสผ่านแอดมินเพื่อแก้ไขข้อมูล:");
+            const pass = prompt("onlystar");
             if (pass === ADMIN_PASS) {
                 isAdmin = true;
                 document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-                document.getElementById('userStatus').innerText = "โหมด: แอดมิน (แก้ไขได้)";
+                document.getElementById('userStatus').innerText = "โหมด: แอดมิน (จัดการข้อมูลได้)";
+                document.getElementById('userStatus').classList.replace('text-emerald-600', 'text-red-600');
                 document.getElementById('loginBtn').style.display = 'none';
-                render(); // รีเรนเดอร์เพื่อให้ปุ่มลบโผล่มา
-            } else {
-                alert("รหัสไม่ถูกต้อง");
-            }
+                render();
+            } else if(pass !== null) { alert("รหัสผ่านไม่ถูกต้อง!"); }
         }
 
         function render() {
-            const bodies = { shopee: document.getElementById('shopeeTableBody'), loan: document.getElementById('loanTableBody') };
-            bodies.shopee.innerHTML = ''; bodies.loan.innerHTML = '';
+            const shopeeBody = document.getElementById('shopeeTableBody');
+            const loanBody = document.getElementById('loanTableBody');
+            shopeeBody.innerHTML = ''; loanBody.innerHTML = '';
             
             items.forEach(p => {
                 const paidCount = p.payments.filter(m => m.isPaid).length;
@@ -113,33 +141,74 @@
                 const percent = Math.round((paidCount / p.totalMonths) * 100);
                 
                 const row = `<tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="openModal(${p.id})">
-                    <td class="p-4 font-bold">${p.debtor} <span class="block font-normal text-[10px] text-gray-400 italic">${p.item}</span></td>
-                    <td class="p-4"><div class="text-[10px] font-bold mb-1">${paidCount}/${p.totalMonths} งวด (${percent}%)</div>
+                    <td class="p-4 font-bold text-gray-700">${p.debtor} <span class="block font-normal text-[10px] text-gray-400 italic">${p.item}</span></td>
+                    <td class="p-4"><div class="text-[10px] font-bold mb-1">${paidCount}/${p.totalMonths} (${percent}%)</div>
                         <div class="w-full bg-gray-100 h-1 rounded-full"><div class="${p.cat==='shopee'?'bg-orange-500':'bg-blue-600'} h-1 rounded-full" style="width: ${percent}%"></div></div></td>
-                    <td class="p-4 text-right font-bold">฿${paidSum.toLocaleString()}</td>
-                    ${isAdmin ? `<td class="p-4 text-center text-red-400" onclick="event.stopPropagation(); deleteItem(${p.id})">✕</td>` : ''}
+                    <td class="p-4 text-right font-bold text-gray-600">฿${paidSum.toLocaleString()}</td>
+                    ${isAdmin ? `<td class="p-4 text-center text-red-300" onclick="event.stopPropagation(); deleteItem(${p.id})">✕</td>` : ''}
                 </tr>`;
-                bodies[p.cat].innerHTML += row;
+                if(p.cat === 'shopee') shopeeBody.innerHTML += row; else loanBody.innerHTML += row;
             });
             updateSummary();
         }
 
         function updateSummary() {
-            const area = document.getElementById('monthlySummaryArea'); area.innerHTML = '';
-            const groups = items.reduce((acc, curr) => {
-                const next = curr.payments.find(p => !p.isPaid);
-                if (next) acc[curr.debtor] = (acc[curr.debtor] || 0) + next.amount;
+            const area = document.getElementById('monthlySummaryArea'); 
+            area.innerHTML = '';
+            const debtorGroups = items.reduce((acc, curr) => {
+                const nextPayment = curr.payments.find(p => !p.isPaid);
+                if (nextPayment) acc[curr.debtor] = (acc[curr.debtor] || 0) + (nextPayment.amount || 0);
                 return acc;
             }, {});
-            for (const name in groups) {
-                area.innerHTML += `<div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100"><div class="text-xs text-emerald-600 font-bold">คุณ${name}</div><div class="text-lg font-bold text-emerald-900">฿${groups[name].toLocaleString()}</div></div>`;
+
+            for (const name in debtorGroups) {
+                area.innerHTML += `<div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 shadow-sm">
+                    <div class="text-xs text-emerald-600 font-bold">คุณ${name}</div>
+                    <div class="text-lg font-bold text-emerald-900">฿${debtorGroups[name].toLocaleString()}</div>
+                </div>`;
             }
         }
 
         async function addItem() {
             if (!isAdmin) return;
-            const newItem = { id: Date.now(), cat: document.getElementById('category').value, debtor: document.getElementById('debtorName').value, item: document.getElementById('itemName').value, totalMonths: parseInt(document.getElementById('totalMonths').value), payments: Array.from({length: parseInt(document.getElementById('totalMonths').value)}, () => ({isPaid: false, amount: 0})) };
-            items.push(newItem); render(); await saveCloud();
+            const debtor = document.getElementById('debtorName').value;
+            const item = document.getElementById('itemName').value;
+            const months = parseInt(document.getElementById('totalMonths').value);
+            if (!debtor || !item) return alert("กรอกข้อมูลให้ครบ");
+
+            items.push({ 
+                id: Date.now(), cat: document.getElementById('category').value, 
+                debtor, item, totalMonths: months, 
+                payments: Array.from({length: months}, () => ({isPaid: false, amount: 0})) 
+            });
+            render(); await saveCloud();
+            document.getElementById('debtorName').value = ''; document.getElementById('itemName').value = '';
+        }
+
+        // --- ฟังก์ชันจ่ายงวดถัดไปแบบแยกหมวดหมู่ ---
+        async function payAllNextMonth(targetCat) {
+            if (!isAdmin) return;
+            const catName = targetCat === 'shopee' ? 'Shopee' : 'เงินกู้';
+            if (!confirm(`ยืนยันติ๊กจ่าย 'งวดถัดไป' ให้ทุกคนในหมวด ${catName}?`)) return;
+            
+            let updated = 0;
+            items.forEach(item => {
+                if (item.cat === targetCat) { // ตรวจสอบหมวดหมู่
+                    const next = item.payments.find(p => !p.isPaid);
+                    if (next) { 
+                        next.isPaid = true; 
+                        updated++; 
+                    }
+                }
+            });
+            
+            if (updated > 0) { 
+                render(); 
+                await saveCloud(); 
+                alert(`อัปเดตหมวด ${catName} เรียบร้อย ${updated} รายการ`); 
+            } else {
+                alert(`ไม่พบงวดค้างชำระในหมวด ${catName}`);
+            }
         }
 
         function openModal(id) {
@@ -151,19 +220,48 @@
                 if(m.isPaid) sum += m.amount;
                 grid.innerHTML += `<div class="flex items-center gap-2 p-2 rounded-xl border ${m.isPaid?'bg-emerald-50':'bg-gray-50'}">
                     <span class="text-[10px] w-12 text-gray-400 font-bold italic">งวด ${i+1}</span>
-                    <input type="number" value="${m.amount || ''}" ${!isAdmin?'disabled':''} onchange="updateAmt(${p.id},${i},this.value)" class="flex-1 text-sm p-1 rounded-lg border outline-none font-bold">
-                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin?'disabled':''} class="w-10 h-10 rounded-xl ${m.isPaid?'bg-emerald-500 text-white':'bg-white text-gray-300 border'}">✓</button></div>`;
+                    <input type="number" value="${m.amount || ''}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id},${i},this.value)" class="flex-1 text-sm p-1.5 rounded-lg border outline-none font-bold">
+                    <button onclick="togglePay(${p.id},${i})" ${!isAdmin ? 'disabled' : ''} class="w-10 h-10 rounded-xl ${m.isPaid ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-gray-300 border'}">${m.isPaid ? '✓' : ''}</button>
+                </div>`;
             });
             document.getElementById('mTotalAmount').innerText = `฿${sum.toLocaleString()}`;
-            document.getElementById('saveModalBtn').innerText = isAdmin ? "บันทึกข้อมูล" : "ปิดหน้าต่าง";
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
         function updateAmt(id, idx, val) { const i = items.find(x => x.id === id); i.payments[idx].amount = parseFloat(val) || 0; }
         function togglePay(id, idx) { const i = items.find(x => x.id === id); i.payments[idx].isPaid = !i.payments[idx].isPaid; openModal(id); }
         async function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); if(isAdmin) await saveCloud(); }
-        async function deleteItem(id) { if(confirm('ลบ?')) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
+        async function deleteItem(id) { if (isAdmin && confirm('ลบ?')) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
         async function saveCloud() { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); }
+
+        function generatePDF(category) {
+            const filtered = items.filter(i => i.cat === category);
+            if(filtered.length === 0) return alert("ไม่มีข้อมูล");
+            const grouped = filtered.reduce((groups, item) => {
+                const name = item.debtor;
+                if (!groups[name]) groups[name] = [];
+                groups[name].push(item);
+                return groups;
+            }, {});
+
+            const area = document.getElementById('pdf-content');
+            area.innerHTML = `<h1 style="font-size:20px; font-weight:bold; margin-bottom:15px;">รายงานสรุป ${category.toUpperCase()}</h1>`;
+            for (const name in grouped) {
+                let pTotal = 0; let rows = '';
+                grouped[name].forEach(p => {
+                    const count = p.payments.filter(m => m.isPaid).length;
+                    const sum = p.payments.reduce((s, m) => m.isPaid ? s + m.amount : s, 0);
+                    pTotal += sum;
+                    rows += `<tr><td style="border:1px solid #ddd; padding:8px;">${p.item}</td><td style="border:1px solid #ddd; padding:8px; text-align:center;">${count}/${p.totalMonths}</td><td style="border:1px solid #ddd; padding:8px; text-align:right;">${sum.toLocaleString()}</td></tr>`;
+                });
+                area.innerHTML += `<div style="margin-bottom:20px;"><div style="background:#eee; padding:5px;">คุณ${name}</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr><th>รายการ</th><th>งวด</th><th style="text-align:right;">จ่ายแล้ว</th></tr></thead><tbody>${rows}</tbody>
+                    <tfoot><tr><td colspan="2" style="text-align:right;">รวม:</td><td style="text-align:right; font-weight:bold;">${pTotal.toLocaleString()}</td></tr></tfoot></table></div>`;
+            }
+            const element = document.getElementById('pdf-container');
+            element.classList.remove('hidden');
+            html2pdf().from(area).save().then(() => element.classList.add('hidden'));
+        }
 
         window.onload = loadData;
     </script>
