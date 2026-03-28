@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBT CLOUD - ZERO INDEX SYSTEM</title>
+    <title>DEBT CLOUD - CORRECTED COUNTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
 
     <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
         <div class="flex items-center gap-2">
-            <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">0</div>
+            <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">D</div>
             <h1 class="font-bold text-xl text-[#AD1457]" id="currentTitle">สรุปยอด</h1>
         </div>
         <div class="flex gap-1.5">
@@ -187,15 +187,12 @@
             renderNameTags();
         }
 
-        // --- แก้ไข: แสดงเลขงวดเริ่มต้นจาก 0 ---
+        // --- หัวใจสำคัญที่แก้ใหม่: นับจำนวนที่จ่ายไปแล้วจริงๆ ---
         function renderCard(p) {
             const totalMonths = p.payments.length;
-            let targetIdx = p.payments.findIndex(m => m.reported && !m.isPaid);
-            if (targetIdx === -1) targetIdx = p.payments.findIndex(m => !m.isPaid);
-            if (targetIdx === -1) targetIdx = totalMonths - 1;
-
-            const displayMonth = targetIdx; // แสดงเลข index โดยตรง (เช่น 0, 1, 2...)
-            const paidCount = p.payments.filter(m => m.isPaid).length;
+            // นับจำนวนงวดที่มีสถานะ isPaid = true
+            const paidCount = p.payments.filter(m => m.isPaid).length; 
+            
             const percent = Math.round((paidCount / totalMonths) * 100);
             const isReported = p.payments.some(m => m.reported && !m.isPaid);
 
@@ -205,7 +202,7 @@
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-end mb-2">
                                 <div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${p.item}</div>
-                                <div class="text-[10px] font-bold text-pink-500">งวด ${displayMonth}/${totalMonths - 1}</div>
+                                <div class="text-[10px] font-bold text-pink-500">งวด ${paidCount}/${totalMonths}</div>
                             </div>
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
                         </div>
@@ -225,7 +222,7 @@
                 const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
                 grid.innerHTML += `
                     <div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
-                        <span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i}</span>
+                        <span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i+1}</span>
                         <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none">
                         <button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button>
                     </div>`;
@@ -248,13 +245,12 @@
         async function togglePay(id, idx) {
             const p = items.find(x => x.id === id);
             if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
-            else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + idx + " แล้ว 🔔"); }
+            else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + (idx+1) + " แล้ว 🔔"); }
             openModal(id); render(); await saveCloud();
         }
 
         function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0; saveCloud(); }
 
-        // --- แก้ไข: เพิ่มรายการให้เริ่มจาก Index 0 ---
         async function addItem() {
             const n = document.getElementById('debtorName').value;
             const it = document.getElementById('itemName').value;
@@ -267,8 +263,7 @@
                 cat: document.getElementById('category').value, 
                 debtor: n, 
                 item: it, 
-                payments: Array.from({length: m}, (_, index) => ({
-                    idx: index, // เก็บค่า index 0, 1, 2...
+                payments: Array.from({length: m}, () => ({
                     isPaid: false, 
                     amount: parseFloat(a), 
                     reported: false
@@ -276,7 +271,7 @@
             });
             
             render(); await saveCloud();
-            alert("เพิ่มรายการใหม่ (เริ่มนับ 0) เรียบร้อย!");
+            alert("เพิ่มรายการเรียบร้อย!");
         }
 
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
@@ -285,7 +280,7 @@
         function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
-        // --- แก้ไข: PDF ให้เริ่มนับจาก 0 เช่นกัน ---
+        // --- แก้ไข PDF: ให้แสดงเลขจำนวนที่จ่ายแล้วตรงกับหน้าแอพ ---
         function generatePDF(type) {
             const content = document.getElementById('pdf-content');
             const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -305,20 +300,23 @@
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr style="background: #fff; font-size: 10px; color: #888; text-align: left;">
                             <th style="padding: 10px 15px;">รายการ</th>
-                            <th style="padding: 10px 15px; text-align: center;">งวดที่</th>
-                            <th style="padding: 10px 15px; text-align: right;">ยอดเงิน</th>
+                            <th style="padding: 10px 15px; text-align: center;">ชำระแล้ว</th>
+                            <th style="padding: 10px 15px; text-align: right;">ยอดเรียกเก็บ</th>
                         </tr>`;
                 
                 grouped[name].forEach(item => {
+                    const totalMonths = item.payments.length;
+                    const paidCount = item.payments.filter(p => p.isPaid).length; // นับจำนวนที่จ่ายแล้ว
+
+                    // ดึงยอดเงินของงวดถัดไปที่ต้องจ่าย
                     let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
                     if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
-                    
                     const amount = item.payments[targetIdx].amount;
                     total += amount;
 
                     html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
                         <td style="padding: 12px 15px;">${item.item}</td>
-                        <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${targetIdx}/${item.payments.length - 1}</td>
+                        <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${paidCount}/${totalMonths}</td>
                         <td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
                     </tr>`;
                 });
@@ -329,7 +327,7 @@
                     </div>
                 </div>`;
             }
-            html += `<p style="text-align: center; margin-top: 40px; color: #ccc; font-size: 9px;">ZERO INDEX DEBT CLOUD</p></div>`;
+            html += `<p style="text-align: center; margin-top: 40px; color: #ccc; font-size: 9px;">DEBT CLOUD SYSTEM</p></div>`;
             content.innerHTML = html;
             html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, jsPDF: { format: 'a4' } }).from(content).save();
         }
