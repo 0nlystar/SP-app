@@ -26,9 +26,38 @@
         .progress-bar { height: 8px; background: #F3E5F5; border-radius: 10px; overflow: hidden; width: 100%; }
         .progress-fill { height: 100%; background: var(--color-accent); transition: width 0.5s; }
         .nav-bar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 2px solid var(--bg-secondary); }
+        
+        /* สไตล์สำหรับ Success Toast */
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: #AD1457;
+            color: #fff;
+            text-align: center;
+            border-radius: 20px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadeinout 2s forwards;
+        }
+        @keyframes fadeinout {
+            0% { opacity: 0; transform: translate(-50%, -40%); }
+            20% { opacity: 1; transform: translate(-50%, -50%); }
+            80% { opacity: 1; transform: translate(-50%, -50%); }
+            100% { opacity: 0; transform: translate(-50%, -60%); }
+        }
     </style>
 </head>
 <body class="min-h-screen pb-28">
+
+    <div id="toast">บันทึกข้อมูลสำเร็จ ✨</div>
 
     <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
         <div class="flex items-center gap-2">
@@ -131,7 +160,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuoGoCZ0IisovMTtrJmbwqL4gS_mSIRYiPINPJPCmqCkDLjpm2IfUgDJ4s6ZgGwVHq/exec"; 
         const ADMIN_PASS = "onlystar"; 
         let items = []; let isAdmin = false; let currentTab = 'shopee';
-        let currentEditingId = null; // เก็บ ID ที่กำลังเปิดดูใน Modal
+        let currentEditingId = null;
 
         async function loadData() {
             try {
@@ -140,6 +169,13 @@
                 items = data || [];
                 render(); 
             } catch (e) { console.error("Load Error"); }
+        }
+
+        // ฟังก์ชันเรียกใช้ป๊อปอัพแจ้งเตือน
+        function showSuccessToast() {
+            const x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
         }
 
         function switchPage(p, t) {
@@ -217,12 +253,9 @@
         }
 
         function openModal(id) {
-            currentEditingId = id; // จำ ID ไว้สำหรับฟังก์ชัน Pay All
+            currentEditingId = id;
             const p = items.find(x => x.id === id);
-            
-            // แสดง/ซ่อน ปุ่ม "จ่ายทุกงวด" ตามสถานะ Admin
             document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
-            
             document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
             document.getElementById('mItemTitle').innerText = p.item;
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
@@ -241,20 +274,17 @@
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        // --- ฟังก์ชันใหม่: จ่ายทุกงวดในรายการที่เลือก ---
         async function payAllFromModal() {
             if (!currentEditingId || !isAdmin) return;
-            if (!confirm("ต้องการติ๊กจ่าย 'ทุกงวด' ของรายการนี้ใช่หรือไม่?")) return;
-
+            // ลบการถามยืนยันออกแล้วให้ทำงานทันที
             const p = items.find(x => x.id === currentEditingId);
             p.payments.forEach(m => {
                 m.isPaid = true;
                 m.reported = false;
             });
-
-            openModal(currentEditingId); // รีเฟรชหน้า Modal
-            render();                    // รีเฟรชหน้าหลัก
-            await saveCloud();           // บันทึกลง Cloud
+            openModal(currentEditingId); 
+            render();
+            await saveCloud();
         }
 
         async function plusOneCategory() {
@@ -296,8 +326,9 @@
                 })) 
             });
             
-            render(); await saveCloud();
-            alert("เพิ่มรายการเรียบร้อย!");
+            render(); 
+            await saveCloud();
+            showSuccessToast(); // แสดงป๊อปอัพแจ้งเตือนสำเร็จ
         }
 
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
