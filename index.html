@@ -109,6 +109,13 @@
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
             <div id="mDebtorSub" class="text-blue-500 font-bold text-xs"></div>
             <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
+            
+            <div id="adminPayAllArea" class="hidden mb-4">
+                <button onclick="payAllFromModal()" class="w-full py-2 bg-green-500 text-white rounded-xl font-bold text-xs shadow-sm active:scale-95 transition-transform">
+                    ✓ จ่ายทุกงวด (SELECT ALL)
+                </button>
+            </div>
+
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
             <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none">
                 <span class="font-bold text-xs text-blue-700 uppercase">Paid Total</span>
@@ -124,6 +131,7 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuoGoCZ0IisovMTtrJmbwqL4gS_mSIRYiPINPJPCmqCkDLjpm2IfUgDJ4s6ZgGwVHq/exec"; 
         const ADMIN_PASS = "onlystar"; 
         let items = []; let isAdmin = false; let currentTab = 'shopee';
+        let currentEditingId = null; // เก็บ ID ที่กำลังเปิดดูใน Modal
 
         async function loadData() {
             try {
@@ -187,12 +195,9 @@
             renderNameTags();
         }
 
-        // --- หัวใจสำคัญที่แก้ใหม่: นับจำนวนที่จ่ายไปแล้วจริงๆ ---
         function renderCard(p) {
             const totalMonths = p.payments.length;
-            // นับจำนวนงวดที่มีสถานะ isPaid = true
             const paidCount = p.payments.filter(m => m.isPaid).length; 
-            
             const percent = Math.round((paidCount / totalMonths) * 100);
             const isReported = p.payments.some(m => m.reported && !m.isPaid);
 
@@ -212,7 +217,12 @@
         }
 
         function openModal(id) {
+            currentEditingId = id; // จำ ID ไว้สำหรับฟังก์ชัน Pay All
             const p = items.find(x => x.id === id);
+            
+            // แสดง/ซ่อน ปุ่ม "จ่ายทุกงวด" ตามสถานะ Admin
+            document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
+            
             document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
             document.getElementById('mItemTitle').innerText = p.item;
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
@@ -229,6 +239,22 @@
             });
             document.getElementById('mTotalAmount').innerText = `฿${Math.round(totalPaid).toLocaleString()}`;
             document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        // --- ฟังก์ชันใหม่: จ่ายทุกงวดในรายการที่เลือก ---
+        async function payAllFromModal() {
+            if (!currentEditingId || !isAdmin) return;
+            if (!confirm("ต้องการติ๊กจ่าย 'ทุกงวด' ของรายการนี้ใช่หรือไม่?")) return;
+
+            const p = items.find(x => x.id === currentEditingId);
+            p.payments.forEach(m => {
+                m.isPaid = true;
+                m.reported = false;
+            });
+
+            openModal(currentEditingId); // รีเฟรชหน้า Modal
+            render();                    // รีเฟรชหน้าหลัก
+            await saveCloud();           // บันทึกลง Cloud
         }
 
         async function plusOneCategory() {
@@ -280,7 +306,6 @@
         function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
-        // --- แก้ไข PDF: ให้แสดงเลขจำนวนที่จ่ายแล้วตรงกับหน้าแอพ ---
         function generatePDF(type) {
             const content = document.getElementById('pdf-content');
             const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -306,9 +331,8 @@
                 
                 grouped[name].forEach(item => {
                     const totalMonths = item.payments.length;
-                    const paidCount = item.payments.filter(p => p.isPaid).length; // นับจำนวนที่จ่ายแล้ว
+                    const paidCount = item.payments.filter(p => p.isPaid).length; 
 
-                    // ดึงยอดเงินของงวดถัดไปที่ต้องจ่าย
                     let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
                     if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
                     const amount = item.payments[targetIdx].amount;
