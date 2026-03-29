@@ -52,11 +52,26 @@
             80% { opacity: 1; transform: translate(-50%, -50%); }
             100% { opacity: 0; transform: translate(-50%, -60%); }
         }
+
+        /* ปุ่ม Scroll to Top */
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 100px; /* อยู่เหนือ Nav bar */
+            right: 20px;
+            z-index: 99;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body class="min-h-screen pb-28">
 
     <div id="toast">บันทึกข้อมูลสำเร็จ ✨</div>
+
+    <button id="scrollTopBtn" onclick="scrollToTop()" class="w-12 h-12 bg-pink-500 text-white rounded-full shadow-2xl flex items-center justify-center border-2 border-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
+    </button>
 
     <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
         <div class="flex items-center gap-2">
@@ -160,7 +175,21 @@
         const ADMIN_PASS = "onlystar"; 
         let items = []; let isAdmin = false; let currentTab = 'shopee';
         let currentEditingId = null;
-        let collapsedGroups = {}; // เก็บสถานะการย่อรายการแยกตามชื่อ
+        let collapsedGroups = {}; 
+
+        // ตรวจจับการเลื่อนหน้าจอเพื่อแสดง/ซ่อนปุ่ม Scroll Top
+        window.onscroll = function() {
+            const btn = document.getElementById("scrollTopBtn");
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                btn.style.display = "flex";
+            } else {
+                btn.style.display = "none";
+            }
+        };
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
         async function loadData() {
             try {
@@ -192,7 +221,6 @@
             render();
         }
 
-        // ฟังก์ชันสำหรับเปิด-ปิดการย่อรายการ
         function toggleGroup(name) {
             collapsedGroups[name] = !collapsedGroups[name];
             render();
@@ -229,11 +257,7 @@
             for (const name in groups) {
                 const isCollapsed = collapsedGroups[name];
                 let groupTotalValue = 0;
-                
-                // คำนวณยอดรวมไว้ก่อนเพื่อให้แสดงผลได้แม้จะพับอยู่
-                groups[name].forEach(p => {
-                    groupTotalValue += p.payments.reduce((sum, m) => sum + m.amount, 0);
-                });
+                groups[name].forEach(p => { groupTotalValue += p.payments.reduce((sum, m) => sum + m.amount, 0); });
 
                 let html = `<div class="mb-4">
                     <button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2 mb-1">
@@ -245,12 +269,9 @@
 
                 if (!isCollapsed) {
                     html += `<div class="space-y-3">`;
-                    groups[name].forEach(p => {
-                        html += renderCard(p);
-                    });
+                    groups[name].forEach(p => { html += renderCard(p); });
                     html += `</div><div class="mt-2 text-right px-2"><span class="text-[12px] font-bold text-blue-700">รวมทั้งหมด: ฿${Math.round(groupTotalValue).toLocaleString()} บาท</span></div>`;
                 }
-                
                 html += `</div>`;
                 activeList.innerHTML += html;
             }
@@ -306,13 +327,8 @@
         async function payAllFromModal() {
             if (!currentEditingId || !isAdmin) return;
             const p = items.find(x => x.id === currentEditingId);
-            p.payments.forEach(m => {
-                m.isPaid = true;
-                m.reported = false;
-            });
-            openModal(currentEditingId); 
-            render();
-            await saveCloud();
+            p.payments.forEach(m => { m.isPaid = true; m.reported = false; });
+            openModal(currentEditingId); render(); await saveCloud();
         }
 
         async function plusOneCategory() {
@@ -339,12 +355,13 @@
             const n = document.getElementById('debtorName').value;
             const it = document.getElementById('itemName').value;
             const a = document.getElementById('defaultAmount').value;
+            const cat = document.getElementById('category').value;
             const m = parseInt(document.getElementById('monthCount').value);
             if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
             
             items.push({ 
                 id: Date.now(), 
-                cat: document.getElementById('category').value, 
+                cat: cat, 
                 debtor: n, 
                 item: it, 
                 payments: Array.from({length: m}, () => ({
@@ -354,9 +371,17 @@
                 })) 
             });
             
-            render(); 
+            if(currentTab !== cat) { switchTab(cat); }
+            else { render(); }
+            
             await saveCloud();
             showSuccessToast();
+
+            if(isAdmin) {
+                setTimeout(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 300);
+            }
         }
 
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
@@ -391,19 +416,16 @@
                 grouped[name].forEach(item => {
                     const totalMonths = item.payments.length;
                     const paidCount = item.payments.filter(p => p.isPaid).length; 
-
                     let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
                     if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
                     const amount = item.payments[targetIdx].amount;
                     total += amount;
-
                     html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
                         <td style="padding: 12px 15px;">${item.item}</td>
                         <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${paidCount}/${totalMonths}</td>
                         <td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
                     </tr>`;
                 });
-
                 html += `</table>
                     <div style="padding: 15px; text-align: right; background: #FFFDE7; font-weight: bold; font-size: 16px;">
                         ยอดรวม: <span style="color: #2563eb;">฿${Math.round(total).toLocaleString()}</span>
