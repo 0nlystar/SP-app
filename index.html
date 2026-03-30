@@ -1,307 +1,195 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DEBT CLOUD - FIXED & FULL FUNCTIONS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-primary: #FFF0F3; --bg-secondary: #E3F2FD; --color-accent: #FFD54F; --text-dark: #37474F; }
-        body { font-family: 'Kanit', sans-serif; background-color: var(--bg-primary); color: var(--text-dark); }
-        .page-section { display: none; }
-        .page-section.active { display: block; animation: fadeIn 0.2s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .secondary-card { background-color: var(--bg-secondary); border: 2px solid #BBDEFB; border-radius: 24px; }
-        .cta-btn { background-color: var(--color-accent); color: #5D4037; box-shadow: 0 4px 0px #FBC02D; transition: all 0.1s; border-radius: 16px; font-weight: bold; }
-        .cta-btn:active { transform: translateY(2px); box-shadow: 0 2px 0px #FBC02D; }
-        .debt-card { background: white; border: 1px solid #F8BBD0; border-radius: 20px; }
-        .report-pending { border: 2px solid #FFAB91 !important; background: #FFF9F8 !important; }
-        .progress-bar { height: 8px; background: #F3E5F5; border-radius: 10px; overflow: hidden; width: 100%; }
-        .progress-fill { height: 100%; background: var(--color-accent); transition: width 0.5s; }
-        .nav-bar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 2px solid var(--bg-secondary); }
-        #toast { visibility: hidden; min-width: 200px; background-color: #AD1457; color: #fff; text-align: center; border-radius: 20px; padding: 16px; position: fixed; z-index: 100; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-        #toast.show { visibility: visible; animation: fadeinout 2s forwards; }
-        @keyframes fadeinout { 0% { opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-        #scrollTopBtn { display: none; position: fixed; bottom: 100px; right: 20px; z-index: 99; }
-        .month-chip input:checked + div { background-color: #ec4899; color: white; border-color: #ec4899; }
-    </style>
-</head>
-<body class="min-h-screen pb-28">
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq29ZAeepeRhB2xfWzhocWrds1-f8nhyFtOkOzSyeENm8rIun_igIcl5Gqy0UrVeVe/exec"; 
+    const ADMIN_PASS = "onlystar"; 
+    let items = []; let isAdmin = false; let currentTab = 'shopee';
+    let currentEditingId = null;
+    let collapsedGroups = {}; 
 
-    <div id="toast">บันทึกสำเร็จ ✨</div>
-
-    <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
-        <div class="flex items-center gap-2">
-            <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">D</div>
-            <h1 class="font-bold text-xl text-[#AD1457]" id="currentTitle">สรุปยอด</h1>
-        </div>
-        <div class="flex gap-1.5">
-            <button onclick="generatePDF('shopee')" class="p-2 bg-orange-100 text-orange-600 rounded-lg text-[10px] font-bold border border-orange-200">PDF SHOPEE</button>
-            <button onclick="generatePDF('loan')" class="p-2 bg-blue-100 text-blue-600 rounded-lg text-[10px] font-bold border border-blue-200">PDF LOAN</button>
-            <button onclick="loginAdmin()" id="adminLock" class="bg-slate-100 p-2 rounded-full text-slate-400">🔒</button>
-        </div>
-    </header>
-
-    <main class="max-w-md mx-auto p-5">
-        <section id="page-home" class="page-section active">
-            <div class="secondary-card p-8 text-center mb-8">
-                <p class="text-blue-600 text-xs font-bold uppercase tracking-widest mb-1">ยอดรวมที่ต้องเก็บ (เดือนนี้)</p>
-                <div id="totalMonthlyAmount" class="text-5xl font-bold text-blue-800">฿0</div>
-            </div>
-            <div id="monthlySummaryArea" class="space-y-3"></div>
-        </section>
-
-        <section id="page-active" class="page-section">
-            <div id="adminPanel" class="hidden mb-6 secondary-card p-6">
-                <div id="nameTagsArea" class="flex flex-wrap gap-1.5 mb-4"></div>
-                <div class="space-y-3">
-                    <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none">
-                    <input type="text" id="itemName" placeholder="รายการสินค้า" class="w-full p-4 rounded-xl border-none outline-none">
-                    <div class="flex gap-2">
-                        <select id="category" class="flex-1 p-4 rounded-xl bg-white font-bold text-blue-600 border-none">
-                            <option value="shopee">Shopee</option>
-                            <option value="loan">เงินกู้</option>
-                        </select>
-                        <select id="monthCount" onchange="generateMonthCheckboxes()" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
-                            <option value="3">3 เดือน</option>
-                            <option value="6">6 เดือน</option>
-                            <option value="12" selected>12 เดือน</option>
-                        </select>
-                    </div>
-                    <div class="bg-white/50 p-4 rounded-2xl mb-3">
-                        <div id="quickMonthSelect" class="grid grid-cols-4 gap-2"></div>
-                    </div>
-                    <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
-                    <button onclick="addItem()" class="cta-btn w-full py-4">บันทึกรายการ</button>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2 mb-6">
-                <div class="flex flex-1 bg-white/50 p-1 rounded-full border border-pink-200">
-                    <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600">SHOPEE</button>
-                    <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400">LOAN</button>
-                </div>
-            </div>
-            <div id="activeListContent" class="space-y-4"></div>
-        </section>
-
-        <section id="page-history" class="page-section">
-            <div id="historyList" class="space-y-3 opacity-60"></div>
-        </section>
-    </main>
-
-    <nav class="fixed bottom-0 left-0 w-full h-20 nav-bar flex items-center px-4 z-50">
-        <button onclick="switchPage('home', 'สรุปยอด')" class="flex-1 flex flex-col items-center text-pink-500" id="nav-home">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-            <span class="text-[10px] font-bold mt-1">HOME</span>
-        </button>
-        <button onclick="switchPage('active', 'รายการค้าง')" class="flex-1 flex flex-col items-center text-slate-400" id="nav-active">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
-            <span class="text-[10px] font-bold mt-1">LIST</span>
-        </button>
-        <button onclick="switchPage('history', 'ประวัติ')" class="flex-1 flex flex-col items-center text-slate-400" id="nav-history">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-            <span class="text-[10px] font-bold mt-1">HISTORY</span>
-        </button>
-    </nav>
-
-    <div id="detailModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end justify-center z-[60]">
-        <div class="bg-white rounded-t-[3rem] w-full max-w-md p-8">
-            <div id="mDebtorSub" class="text-blue-500 font-bold text-xs"></div>
-            <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
-            <div id="adminPayAllArea" class="hidden mb-4">
-                <button onclick="payAllFromModal()" class="w-full py-2 bg-green-500 text-white rounded-xl font-bold text-xs">จ่ายทุกงวด (SELECT ALL)</button>
-            </div>
-            <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
-            <div class="mt-6 flex justify-between items-center p-5 secondary-card">
-                <span class="font-bold text-xs">Paid Total</span>
-                <span id="mTotalAmount" class="text-2xl font-bold text-blue-800">฿0</span>
-            </div>
-            <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4">Close</button>
-        </div>
-    </div>
-
-    <div id="pdf-container" class="hidden"><div id="pdf-content"></div></div>
-
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmN6gKqwsonhCtAWV4TVXip4BbH9ebVw5dG_Rhg8-8_Pj7YlyeaVSt3-DPAdBZUGSr/exec"; 
-        const ADMIN_PASS = "onlystar"; 
-        let items = []; let isAdmin = false; let currentTab = 'shopee';
-        let currentEditingId = null; let collapsedGroups = {}; 
-
-        // แก้ปัญหาหาย: ดึงจากเครื่องก่อนเสมอ และห้ามเอาค่าว่างมาทับ
-        async function loadData() {
-            const cached = localStorage.getItem('debt_data');
-            if (cached) { items = JSON.parse(cached); render(); }
-            
-            try {
-                const res = await fetch(SCRIPT_URL);
-                const cloudData = await res.json();
-                // ตัวล็อค: ต้องมีข้อมูลจริงถึงจะอนุญาตให้ทับ LocalStorage
-                if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
-                    items = cloudData;
-                    localStorage.setItem('debt_data', JSON.stringify(items));
-                    render();
-                }
-            } catch (e) { console.log("Offline mode"); }
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTopBtn");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "flex";
+        } else {
+            btn.style.display = "none";
         }
+    };
 
-        async function saveCloud() {
-            localStorage.setItem('debt_data', JSON.stringify(items)); // เซฟลงเครื่องทันที
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ✅ FIX LOAD (กัน JSON พัง)
+    async function loadData() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const text = await res.text();
+
             try {
-                await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) });
-            } catch (e) { console.error("Cloud Save Fail"); }
-        }
-
-        function render() {
-            const activeList = document.getElementById('activeListContent');
-            const summaryArea = document.getElementById('monthlySummaryArea');
-            if(!activeList || !summaryArea) return;
-            activeList.innerHTML = ''; summaryArea.innerHTML = '';
-
-            let grandTotal = 0; const summaryData = {};
-            items.forEach(i => {
-                const nextPay = i.payments.find(p => !p.isPaid);
-                if (nextPay) {
-                    summaryData[i.debtor] = (summaryData[i.debtor] || 0) + nextPay.amount;
-                    grandTotal += nextPay.amount;
-                }
-            });
-            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
-            Object.keys(summaryData).forEach(name => {
-                summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400 mb-2"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
-            });
-
-            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid) && i.cat === currentTab);
-            const groups = activeItems.reduce((acc, curr) => {
-                if(!acc[curr.debtor]) acc[curr.debtor] = [];
-                acc[curr.debtor].push(curr);
-                return acc;
-            }, {});
-
-            for (const name in groups) {
-                const isCollapsed = collapsedGroups[name];
-                let groupTotalValue = 0;
-                groups[name].forEach(p => { 
-                    const nextM = p.payments.find(m => !m.isPaid);
-                    if(nextM) groupTotalValue += nextM.amount; 
-                });
-
-                let html = `<div class="mb-4">
-                    <button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2 mb-1">
-                        <h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">${isCollapsed ? '▶' : '▼'} CLIENT: ${name}</h3>
-                        ${isCollapsed ? `<span class="text-[10px] font-bold text-blue-500">฿${Math.round(groupTotalValue).toLocaleString()}</span>` : ''}
-                    </button>`;
-
-                if (!isCollapsed) {
-                    html += `<div class="space-y-3">`;
-                    groups[name].forEach(p => { html += renderCard(p); });
-                    html += `</div>`;
-                }
-                html += `</div>`;
-                activeList.innerHTML += html;
+                items = JSON.parse(text);
+                if (!Array.isArray(items)) items = [];
+            } catch (e) {
+                console.error("JSON Parse Error:", e);
+                items = [];
             }
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
-            renderNameTags();
-        }
 
-        function renderCard(p) {
-            const totalMonths = p.payments.length;
-            const paidCount = p.payments.filter(m => m.isPaid).length; 
-            const percent = Math.round((paidCount / totalMonths) * 100);
-            const isReported = p.payments.some(m => m.reported && !m.isPaid);
-            return `<div class="flex items-center gap-2">
-                <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}">
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-end mb-2">
-                            <div class="font-bold text-sm text-slate-700 truncate">${isReported ? '🔔 ' : ''}${p.item}</div>
-                            <div class="text-[10px] font-bold text-pink-500">งวด ${paidCount}/${totalMonths}</div>
-                        </div>
-                        <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
+            render();
+
+        } catch (e) {
+            console.error("Load Error:", e);
+            items = [];
+            render();
+        }
+    }
+
+    function showSuccessToast() {
+        const x = document.getElementById("toast");
+        x.className = "show";
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
+    }
+
+    function switchPage(p, t) {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => { b.classList.remove('text-pink-500'); b.classList.add('text-slate-400'); });
+        document.getElementById('page-'+p).classList.add('active');
+        document.getElementById('nav-'+p).classList.replace('text-slate-400', 'text-pink-500');
+        document.getElementById('currentTitle').innerText = t;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-shopee').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='shopee'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+        document.getElementById('tab-loan').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='loan'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+        render();
+    }
+
+    function toggleGroup(name) {
+        collapsedGroups[name] = !collapsedGroups[name];
+        render();
+    }
+
+    function generateMonthCheckboxes() {
+        const mCount = parseInt(document.getElementById('monthCount').value);
+        const container = document.getElementById('quickMonthSelect');
+        if(!container) return;
+        
+        container.innerHTML = '';
+        for (let i = 1; i <= mCount; i++) {
+            container.innerHTML += `
+                <label class="month-chip relative">
+                    <input type="checkbox" class="quick-pay-check hidden" value="${i-1}" onchange="handleQuickPayLogic(${i-1}, this.checked)">
+                    <div class="flex items-center justify-center py-2 rounded-xl bg-white border-2 border-slate-100 text-[11px] font-bold text-slate-400 transition-all cursor-pointer">
+                        ${i}
                     </div>
-                </div>
-                ${isAdmin ? `<button onclick="deleteItem(${p.id})" class="w-10 h-14 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>` : ''}
-            </div>`;
+                </label>
+            `;
         }
+    }
 
-        function openModal(id) {
-            currentEditingId = id;
-            const p = items.find(x => x.id === id);
-            document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
-            document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
-            document.getElementById('mItemTitle').innerText = p.item;
-            const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
-            let totalPaid = 0;
-            p.payments.forEach((m, i) => {
-                if(m.isPaid) totalPaid += m.amount;
-                const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
-                grid.innerHTML += `<div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
-                    <span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i+1}</span>
-                    <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none">
-                    <button onclick="togglePay(${p.id}, ${i})" class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button>
-                </div>`;
+    function handleQuickPayLogic(index, isChecked) {
+        const checkboxes = document.querySelectorAll('.quick-pay-check');
+        checkboxes.forEach((cb, i) => {
+            if (isChecked && i <= index) cb.checked = true;
+            else if (!isChecked && i >= index) cb.checked = false;
+        });
+    }
+
+    function render() {
+        const activeList = document.getElementById('activeListContent');
+        const historyList = document.getElementById('historyList');
+        const summaryArea = document.getElementById('monthlySummaryArea');
+        activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
+        document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
+
+        let grandTotal = 0; const summaryData = {};
+        items.forEach(i => {
+            const nextPay = i.payments.find(p => !p.isPaid);
+            if (nextPay) {
+                summaryData[i.debtor] = (summaryData[i.debtor] || 0) + nextPay.amount;
+                grandTotal += nextPay.amount;
+            }
+        });
+        document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
+        
+        Object.keys(summaryData).forEach(name => {
+            summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
+        });
+    }
+
+    async function addItem() {
+        const n = document.getElementById('debtorName').value;
+        const it = document.getElementById('itemName').value;
+        const a = document.getElementById('defaultAmount').value;
+        const cat = document.getElementById('category').value;
+        const m = parseInt(document.getElementById('monthCount').value);
+        
+        if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
+
+        const checkedMonths = Array.from(document.querySelectorAll('.quick-pay-check:checked')).map(cb => parseInt(cb.value));
+        
+        items.push({ 
+            id: Date.now(), 
+            cat: cat, 
+            debtor: n, 
+            item: it, 
+            payments: Array.from({length: m}, (_, index) => ({
+                isPaid: checkedMonths.includes(index), 
+                amount: parseFloat(a), 
+                reported: false
+            })) 
+        });
+        
+        render();
+        await saveCloud();
+        showSuccessToast();
+    }
+
+    async function deleteItem(id) { 
+        if(confirm("ลบรายการนี้?")) { 
+            items = items.filter(x => x.id !== id); 
+            render(); 
+            await saveCloud(); 
+        } 
+    }
+
+    // ✅ FIX SAVE (รู้ผลจริง + ไม่ no-cors)
+    async function saveCloud() {
+        try {
+            const res = await fetch(SCRIPT_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(items)
             });
-            document.getElementById('mTotalAmount').innerText = `฿${Math.round(totalPaid).toLocaleString()}`;
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
 
-        async function addItem() {
-            const n = document.getElementById('debtorName').value;
-            const it = document.getElementById('itemName').value;
-            const a = document.getElementById('defaultAmount').value;
-            const cat = document.getElementById('category').value;
-            const m = parseInt(document.getElementById('monthCount').value);
-            if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
-            items.push({ id: Date.now(), cat: cat, debtor: n, item: it, payments: Array.from({length: m}, () => ({isPaid: false, amount: parseFloat(a), reported: false})) });
-            render(); await saveCloud(); document.getElementById('itemName').value = ''; showSuccessToast();
-        }
+            const text = await res.text();
 
-        async function togglePay(id, idx) {
-            const p = items.find(x => x.id === id);
-            if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
-            else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + (idx+1) + " แล้ว 🔔"); }
-            openModal(id); render(); await saveCloud();
-        }
+            if (!text.includes("Success")) {
+                console.error("Save failed:", text);
+            }
 
-        async function payAllFromModal() {
-            const p = items.find(x => x.id === currentEditingId);
-            p.payments.forEach(m => { m.isPaid = true; m.reported = false; });
-            openModal(currentEditingId); render(); await saveCloud();
+        } catch (e) {
+            console.error("Save Error:", e);
         }
+    }
 
-        async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
-        function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
-        function switchPage(p, t) {
-            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-            document.getElementById('page-'+p).classList.add('active');
-            document.getElementById('currentTitle').innerText = t;
-        }
-        function switchTab(tab) { currentTab = tab; render(); }
-        function toggleGroup(name) { collapsedGroups[name] = !collapsedGroups[name]; render(); }
-        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); }
-        function showSuccessToast() { const x = document.getElementById("toast"); x.className = "show"; setTimeout(()=>x.className="", 2000); }
-        function generateMonthCheckboxes() { /* ฟังก์ชันย่อยสำหรับ Admin UI */ }
-        function renderNameTags() { /* ฟังก์ชันแสดง Tag ชื่อ */ }
+    function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
+    
+    function loginAdmin() { 
+        if (prompt("Admin Key:") === ADMIN_PASS) { 
+            isAdmin = true; 
+            document.getElementById('adminPanel').classList.remove('hidden'); 
+            document.getElementById('adminLock').innerText = "🔓"; 
+            generateMonthCheckboxes(); 
+            render(); 
+        } 
+    }
 
-        // ฟังก์ชัน PDF ที่กู้คืนมาให้
-        function generatePDF(cat) {
-            const content = document.getElementById('pdf-content');
-            content.innerHTML = `<h1 style="text-align:center">รายการค้างชำระ - ${cat.toUpperCase()}</h1>`;
-            items.filter(i => i.cat === cat && i.payments.some(p => !p.isPaid)).forEach(i => {
-                const nextPay = i.payments.find(p => !p.isPaid);
-                content.innerHTML += `<div style="border-bottom:1px solid #ccc; padding:10px;">
-                    <b>คุณ${i.debtor}</b> - ${i.item}<br>
-                    ยอดเรียกเก็บงวดนี้: ฿${nextPay.amount.toLocaleString()}
-                </div>`;
-            });
-            html2pdf().from(content).save(`Debt_Report_${cat}.pdf`);
-        }
+    function renderNameTags() { 
+        const area = document.getElementById('nameTagsArea'); 
+        const names = [...new Set(items.map(i => i.debtor))]; 
+        area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); 
+    }
 
-        window.onload = loadData;
-    </script>
-</body>
-</html>
+    window.onload = loadData;
+</script>
