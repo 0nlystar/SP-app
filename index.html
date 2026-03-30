@@ -290,7 +290,67 @@
     function showSuccessToast() { const x = document.getElementById("toast"); x.className = "show"; setTimeout(()=>x.className="", 2000); }
     function loginAdmin() { if(prompt("Pass:")===ADMIN_PASS) { isAdmin=true; document.getElementById('adminPanel').classList.remove('hidden'); render(); } }
     function renderNameTags() { const names = [...new Set(items.map(i=>i.debtor))]; document.getElementById('nameTagsArea').innerHTML = names.map(n=>`<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 cursor-pointer">${n}</div>`).join(''); }
+    // --- ฟังก์ชันระบบ PDF (ที่หายไป) ---
+    function generatePDF(type) {
+        const container = document.getElementById('pdf-content');
+        container.innerHTML = ''; // ล้างค่าเก่า
+        
+        const filteredItems = items.filter(i => i.cat === type);
+        const title = type === 'shopee' ? 'รายงานยอดค้าง SHOPEE' : 'รายงานยอดค้างเงินกู้ (LOAN)';
+        
+        let html = `
+            <div style="padding: 40px; font-family: 'Kanit', sans-serif;">
+                <h1 style="text-align: center; color: #AD1457; font-size: 24px;">${title}</h1>
+                <p style="text-align: center; color: #666;">วันที่ออกเอกสาร: ${new Date().toLocaleDateString('th-TH')}</p>
+                <hr style="border: 1px solid #FCE4EC; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #F8BBD0; color: white;">
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">ชื่อลูกค้า</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">รายการ</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">งวดที่จ่ายแล้ว</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">ยอดต่อเดือน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
 
+        filteredItems.forEach(i => {
+            const paidCount = i.payments.filter(p => p.isPaid).length;
+            const totalCount = i.payments.length;
+            const amount = i.payments[0]?.amount || 0;
+            
+            html += `
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${i.debtor}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${i.item}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${paidCount} / ${totalCount}</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">฿${Math.round(amount).toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 30px; text-align: right; font-weight: bold; font-size: 18px; color: #AD1457;">
+                    ยอดรวมทั้งหมด: ฿${Math.round(filteredItems.reduce((acc, curr) => acc + (curr.payments.find(p => !p.isPaid)?.amount || 0), 0)).toLocaleString()}
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+        const opt = {
+            margin: 10,
+            filename: `DEBT-REPORT-${type.toUpperCase()}-${Date.now()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(container).save();
+    }
     window.addEventListener('load', loadData);
 </script>
 </body>
