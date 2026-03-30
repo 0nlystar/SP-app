@@ -62,6 +62,19 @@
             cursor: pointer;
             transition: opacity 0.3s;
         }
+
+        /* NEW UX/UI Styles for Month Selection */
+        .month-chip {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+        .month-chip input:checked + div {
+            background-color: #ec4899;
+            color: white;
+            border-color: #ec4899;
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="min-h-screen pb-28">
@@ -112,8 +125,11 @@
                         </select>
                     </div>
                     
-                    <div id="quickMonthSelect" class="flex flex-wrap gap-2 p-3 bg-white/40 rounded-2xl mb-3">
-                        </div>
+                    <div class="bg-white/50 p-4 rounded-2xl mb-3">
+                        <p class="text-[11px] font-bold text-slate-500 mb-3 ml-1">✓ เลือกงวดที่ชำระมาแล้ว (จะเลือกย้อนหลังให้เอง)</p>
+                        <div id="quickMonthSelect" class="grid grid-cols-4 gap-2">
+                            </div>
+                    </div>
 
                     <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
                     <button onclick="addItem()" class="cta-btn find w-full py-4">บันทึกรายการ</button>
@@ -228,22 +244,37 @@
             render();
         }
 
-        // ฟังก์ชันสร้าง Checkboxes งวดด่วน
+        // --- UPDATED UX/UI & LOGIC FOR MONTH SELECTION ---
         function generateMonthCheckboxes() {
             const mCount = parseInt(document.getElementById('monthCount').value);
             const container = document.getElementById('quickMonthSelect');
             if(!container) return;
             
-            container.innerHTML = '<p class="w-full text-[9px] font-bold text-slate-500 mb-1">ติ๊กงวดที่จ่ายแล้ว:</p>';
+            container.innerHTML = '';
             for (let i = 1; i <= mCount; i++) {
                 container.innerHTML += `
-                    <label class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 cursor-pointer active:scale-90 transition-transform">
-                        <input type="checkbox" class="quick-pay-check w-3 h-3" value="${i-1}">
-                        <span class="text-[10px] font-bold text-slate-600">${i}</span>
+                    <label class="month-chip relative">
+                        <input type="checkbox" class="quick-pay-check hidden" value="${i-1}" onchange="handleQuickPayLogic(${i-1}, this.checked)">
+                        <div class="flex items-center justify-center py-2 rounded-xl bg-white border-2 border-slate-100 text-[11px] font-bold text-slate-400 transition-all cursor-pointer">
+                            ${i}
+                        </div>
                     </label>
                 `;
             }
         }
+
+        // New Logic: Check all previous months
+        function handleQuickPayLogic(index, isChecked) {
+            const checkboxes = document.querySelectorAll('.quick-pay-check');
+            checkboxes.forEach((cb, i) => {
+                if (isChecked && i <= index) {
+                    cb.checked = true;
+                } else if (!isChecked && i >= index) {
+                    cb.checked = false;
+                }
+            });
+        }
+        // -------------------------------------------------
 
         function render() {
             const activeList = document.getElementById('activeListContent');
@@ -379,7 +410,6 @@
             
             if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
 
-            // ดึงค่าว่าติ๊กงวดไหนไปบ้าง
             const checkedMonths = Array.from(document.querySelectorAll('.quick-pay-check:checked')).map(cb => parseInt(cb.value));
             
             items.push({ 
@@ -394,7 +424,6 @@
                 })) 
             });
             
-            // ล้างฟอร์ม
             document.getElementById('itemName').value = '';
             document.getElementById('defaultAmount').value = '';
             generateMonthCheckboxes(); 
@@ -421,7 +450,7 @@
                 isAdmin = true; 
                 document.getElementById('adminPanel').classList.remove('hidden'); 
                 document.getElementById('adminLock').innerText = "🔓"; 
-                generateMonthCheckboxes(); // สร้างช่องติ๊กครั้งแรกตอนล็อกอิน
+                generateMonthCheckboxes(); 
                 render(); 
             } 
         }
