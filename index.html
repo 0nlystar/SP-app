@@ -153,17 +153,32 @@
         } catch (e) { console.error("Load Error:", e); }
     }
 
-    async function saveCloud() {
-        try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                body: JSON.stringify(items),
-                headers: { "Content-Type": "text/plain;charset=utf-8" }
-            });
-            return true;
-        } catch (e) { console.error("Save Error:", e); return false; }
-    }
+   async function saveCloud() {
+    try {
+        const res = await fetch(SCRIPT_URL, { 
+            method: "POST", 
+            // ลบ mode: "no-cors" ออก 
+            body: JSON.stringify(items),
+            headers: { 
+                // ใช้ text/plain เพื่อเลี่ยงการเช็ค CORS ที่เข้มงวดของ Google
+                "Content-Type": "text/plain;charset=utf-8" 
+            } 
+        });
 
+        // ตรวจสอบว่า Google ตอบกลับมาว่า Success หรือไม่
+        const result = await res.text();
+        if (result.includes("Success")) {
+            showSuccessToast();
+            return true;
+        } else {
+            throw new Error(result);
+        }
+    } catch (e) { 
+        console.error("Save Error:", e);
+        alert("บันทึกไม่สำเร็จ: " + e.message);
+        return false; 
+    }
+}
     async function addItem() {
         const n = document.getElementById('debtorName').value;
         const it = document.getElementById('itemName').value;
