@@ -53,11 +53,10 @@
             100% { opacity: 0; transform: translate(-50%, -60%); }
         }
 
-        /* ปุ่ม Scroll to Top */
         #scrollTopBtn {
             display: none;
             position: fixed;
-            bottom: 100px; /* อยู่เหนือ Nav bar */
+            bottom: 100px; 
             right: 20px;
             z-index: 99;
             cursor: pointer;
@@ -105,13 +104,17 @@
                             <option value="shopee">Shopee</option>
                             <option value="loan">เงินกู้</option>
                         </select>
-                        <select id="monthCount" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
+                        <select id="monthCount" onchange="generateMonthCheckboxes()" class="flex-1 p-4 rounded-xl bg-white font-bold text-pink-600 border-none">
                             <option value="3">3 เดือน</option>
                             <option value="6">6 เดือน</option>
                             <option value="9">9 เดือน</option>
                             <option value="12" selected>12 เดือน</option>
                         </select>
                     </div>
+                    
+                    <div id="quickMonthSelect" class="flex flex-wrap gap-2 p-3 bg-white/40 rounded-2xl mb-3">
+                        </div>
+
                     <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
                     <button onclick="addItem()" class="cta-btn find w-full py-4">บันทึกรายการ</button>
                 </div>
@@ -177,7 +180,6 @@
         let currentEditingId = null;
         let collapsedGroups = {}; 
 
-        // ตรวจจับการเลื่อนหน้าจอเพื่อแสดง/ซ่อนปุ่ม Scroll Top
         window.onscroll = function() {
             const btn = document.getElementById("scrollTopBtn");
             if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
@@ -224,6 +226,23 @@
         function toggleGroup(name) {
             collapsedGroups[name] = !collapsedGroups[name];
             render();
+        }
+
+        // ฟังก์ชันสร้าง Checkboxes งวดด่วน
+        function generateMonthCheckboxes() {
+            const mCount = parseInt(document.getElementById('monthCount').value);
+            const container = document.getElementById('quickMonthSelect');
+            if(!container) return;
+            
+            container.innerHTML = '<p class="w-full text-[9px] font-bold text-slate-500 mb-1">ติ๊กงวดที่จ่ายแล้ว:</p>';
+            for (let i = 1; i <= mCount; i++) {
+                container.innerHTML += `
+                    <label class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200 cursor-pointer active:scale-90 transition-transform">
+                        <input type="checkbox" class="quick-pay-check w-3 h-3" value="${i-1}">
+                        <span class="text-[10px] font-bold text-slate-600">${i}</span>
+                    </label>
+                `;
+            }
         }
 
         function render() {
@@ -357,20 +376,29 @@
             const a = document.getElementById('defaultAmount').value;
             const cat = document.getElementById('category').value;
             const m = parseInt(document.getElementById('monthCount').value);
+            
             if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
+
+            // ดึงค่าว่าติ๊กงวดไหนไปบ้าง
+            const checkedMonths = Array.from(document.querySelectorAll('.quick-pay-check:checked')).map(cb => parseInt(cb.value));
             
             items.push({ 
                 id: Date.now(), 
                 cat: cat, 
                 debtor: n, 
                 item: it, 
-                payments: Array.from({length: m}, () => ({
-                    isPaid: false, 
+                payments: Array.from({length: m}, (_, index) => ({
+                    isPaid: checkedMonths.includes(index), 
                     amount: parseFloat(a), 
                     reported: false
                 })) 
             });
             
+            // ล้างฟอร์ม
+            document.getElementById('itemName').value = '';
+            document.getElementById('defaultAmount').value = '';
+            generateMonthCheckboxes(); 
+
             if(currentTab !== cat) { switchTab(cat); }
             else { render(); }
             
@@ -387,7 +415,17 @@
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
         async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {} }
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
-        function loginAdmin() { if (prompt("Admin Key:") === ADMIN_PASS) { isAdmin = true; document.getElementById('adminPanel').classList.remove('hidden'); document.getElementById('adminLock').innerText = "🔓"; render(); } }
+        
+        function loginAdmin() { 
+            if (prompt("Admin Key:") === ADMIN_PASS) { 
+                isAdmin = true; 
+                document.getElementById('adminPanel').classList.remove('hidden'); 
+                document.getElementById('adminLock').innerText = "🔓"; 
+                generateMonthCheckboxes(); // สร้างช่องติ๊กครั้งแรกตอนล็อกอิน
+                render(); 
+            } 
+        }
+
         function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
 
         function generatePDF(type) {
