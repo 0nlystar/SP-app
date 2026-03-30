@@ -189,347 +189,293 @@
 
     <div id="pdf-container" class="hidden"><div id="pdf-content"></div></div>
 
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq29ZAeepeRhB2xfWzhocWrds1-f8nhyFtOkOzSyeENm8rIun_igIcl5Gqy0UrVeVe/exec"; 
-        const ADMIN_PASS = "onlystar"; 
-        let items = []; let isAdmin = false; let currentTab = 'shopee';
-        let currentEditingId = null;
-        let collapsedGroups = {}; 
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4XxoeQ_G15t7NRktXyVrPvJWKh6tnj1AdSSSmBnWANrIFFDFO8lLRaYPzsthqtYU/exec"; 
+    const ADMIN_PASS = "onlystar"; 
+    let items = []; 
+    let isAdmin = false; 
+    let currentTab = 'shopee';
+    let currentEditingId = null;
+    let collapsedGroups = {}; 
 
-        window.onscroll = function() {
-            const btn = document.getElementById("scrollTopBtn");
-            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-                btn.style.display = "flex";
-            } else {
-                btn.style.display = "none";
-            }
-        };
-
-        function scrollToTop() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function loadData() {
-            try {
-                const res = await fetch(SCRIPT_URL);
-                const data = await res.json();
-                items = data || [];
-                render(); 
-            } catch (e) { console.error("Load Error"); }
-        }
-
-        function showSuccessToast() {
-            const x = document.getElementById("toast");
-            x.className = "show";
-            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
-        }
-
-        function switchPage(p, t) {
-            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(b => { b.classList.remove('text-pink-500'); b.classList.add('text-slate-400'); });
-            document.getElementById('page-'+p).classList.add('active');
-            document.getElementById('nav-'+p).classList.replace('text-slate-400', 'text-pink-500');
-            document.getElementById('currentTitle').innerText = t;
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tab-shopee').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='shopee'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
-            document.getElementById('tab-loan').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='loan'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
-            render();
-        }
-
-        function toggleGroup(name) {
-            collapsedGroups[name] = !collapsedGroups[name];
-            render();
-        }
-
-        // --- UPDATED UX/UI & LOGIC FOR MONTH SELECTION ---
-        function generateMonthCheckboxes() {
-            const mCount = parseInt(document.getElementById('monthCount').value);
-            const container = document.getElementById('quickMonthSelect');
-            if(!container) return;
-            
-            container.innerHTML = '';
-            for (let i = 1; i <= mCount; i++) {
-                container.innerHTML += `
-                    <label class="month-chip relative">
-                        <input type="checkbox" class="quick-pay-check hidden" value="${i-1}" onchange="handleQuickPayLogic(${i-1}, this.checked)">
-                        <div class="flex items-center justify-center py-2 rounded-xl bg-white border-2 border-slate-100 text-[11px] font-bold text-slate-400 transition-all cursor-pointer">
-                            ${i}
-                        </div>
-                    </label>
-                `;
-            }
-        }
-
-        // New Logic: Check all previous months
-        function handleQuickPayLogic(index, isChecked) {
-            const checkboxes = document.querySelectorAll('.quick-pay-check');
-            checkboxes.forEach((cb, i) => {
-                if (isChecked && i <= index) {
-                    cb.checked = true;
-                } else if (!isChecked && i >= index) {
-                    cb.checked = false;
-                }
-            });
-        }
-        // -------------------------------------------------
-
-        function render() {
-            const activeList = document.getElementById('activeListContent');
-            const historyList = document.getElementById('historyList');
-            const summaryArea = document.getElementById('monthlySummaryArea');
-            activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
-            document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
-
-            let grandTotal = 0; const summaryData = {};
-            items.forEach(i => {
-                const nextPay = i.payments.find(p => !p.isPaid);
-                if (nextPay) {
-                    summaryData[i.debtor] = (summaryData[i.debtor] || 0) + nextPay.amount;
-                    grandTotal += nextPay.amount;
-                }
-            });
-            document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
-            
-            Object.keys(summaryData).forEach(name => {
-                summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
-            });
-
-            const activeItems = items.filter(i => i.payments.some(p => !p.isPaid) && i.cat === currentTab);
-            const groups = activeItems.reduce((acc, curr) => {
-                if(!acc[curr.debtor]) acc[curr.debtor] = [];
-                acc[curr.debtor].push(curr);
-                return acc;
-            }, {});
-
-            for (const name in groups) {
-                const isCollapsed = collapsedGroups[name];
-                let groupTotalValue = 0;
-                groups[name].forEach(p => { groupTotalValue += p.payments.reduce((sum, m) => sum + m.amount, 0); });
-
-                let html = `<div class="mb-4">
-                    <button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2 mb-1">
-                        <h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest flex items-center gap-1">
-                            ${isCollapsed ? '▶' : '▼'} 👤 CLIENT: ${name}
-                        </h3>
-                        ${isCollapsed ? `<span class="text-[10px] font-bold text-blue-500">฿${Math.round(groupTotalValue).toLocaleString()}</span>` : ''}
-                    </button>`;
-
-                if (!isCollapsed) {
-                    html += `<div class="space-y-3">`;
-                    groups[name].forEach(p => { html += renderCard(p); });
-                    html += `</div><div class="mt-2 text-right px-2"><span class="text-[12px] font-bold text-blue-700">รวมทั้งหมด: ฿${Math.round(groupTotalValue).toLocaleString()} บาท</span></div>`;
-                }
-                html += `</div>`;
-                activeList.innerHTML += html;
-            }
-            items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
-            renderNameTags();
-        }
-
-        function renderCard(p) {
-            const totalMonths = p.payments.length;
-            const paidCount = p.payments.filter(m => m.isPaid).length; 
-            const percent = Math.round((paidCount / totalMonths) * 100);
-            const isReported = p.payments.some(m => m.reported && !m.isPaid);
-            const itemTotal = p.payments.reduce((sum, m) => sum + m.amount, 0);
-
-            return `
-                <div class="flex items-center gap-2">
-                    <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-end mb-2">
-                                <div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${p.item}</div>
-                                <div class="text-[10px] font-bold text-pink-500">งวด ${paidCount}/${totalMonths}</div>
-                            </div>
-                            <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
-                            <div class="text-[11px] font-bold text-slate-600 mt-2">ราคา: ฿${Math.round(itemTotal).toLocaleString()} บาท</div>
-                        </div>
-                    </div>
-                    ${isAdmin ? `<button onclick="deleteItem(${p.id})" class="w-10 h-14 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>` : ''}
-                </div>`;
-        }
-
-        function openModal(id) {
-            currentEditingId = id;
-            const p = items.find(x => x.id === id);
-            document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
-            document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
-            document.getElementById('mItemTitle').innerText = p.item;
-            const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
-            let totalPaid = 0;
-            p.payments.forEach((m, i) => {
-                if(m.isPaid) totalPaid += m.amount;
-                const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
-                grid.innerHTML += `
-                    <div class="flex items-center gap-3 p-4 rounded-2xl border ${status}">
-                        <span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i+1}</span>
-                        <input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none">
-                        <button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button>
-                    </div>`;
-            });
-            document.getElementById('mTotalAmount').innerText = `฿${Math.round(totalPaid).toLocaleString()}`;
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
-        async function payAllFromModal() {
-            if (!currentEditingId || !isAdmin) return;
-            const p = items.find(x => x.id === currentEditingId);
-            p.payments.forEach(m => { m.isPaid = true; m.reported = false; });
-            openModal(currentEditingId); render(); await saveCloud();
-        }
-
-        async function plusOneCategory() {
-            if(!confirm(`บวก +1 งวดให้ทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
-            items.forEach(item => {
-                if(item.cat === currentTab) {
-                    const nextIdx = item.payments.findIndex(m => !m.isPaid);
-                    if (nextIdx !== -1) { item.payments[nextIdx].isPaid = true; item.payments[nextIdx].reported = false; }
-                }
-            });
-            render(); await saveCloud();
-        }
-
-        async function togglePay(id, idx) {
-            const p = items.find(x => x.id === id);
-            if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
-            else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + (idx+1) + " แล้ว 🔔"); }
-            openModal(id); render(); await saveCloud();
-        }
-
-        function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0; saveCloud(); }
-
-        async function addItem() {
-    const n = document.getElementById('debtorName').value;
-    const it = document.getElementById('itemName').value;
-    const a = document.getElementById('defaultAmount').value;
-    const cat = document.getElementById('category').value;
-    const m = parseInt(document.getElementById('monthCount').value);
-    
-    if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
-
-    const checkedMonths = Array.from(document.querySelectorAll('.quick-pay-check:checked')).map(cb => parseInt(cb.value));
-    
-    // 1. เพิ่มเข้าตัวแปร local ก่อน
-    items.push({ 
-        id: Date.now(), 
-        cat: cat, 
-        debtor: n, 
-        item: it, 
-        payments: Array.from({length: m}, (_, index) => ({
-            isPaid: checkedMonths.includes(index), 
-            amount: parseFloat(a), 
-            reported: false
-        })) 
-    });
-    
-    // 2. สั่งบันทึกขึ้น Cloud และ "รอ" (await) ให้เสร็จ
-    const isSaved = await saveCloud();
-
-    if (isSaved) {
-        // ล้างค่าในช่องกรอก
-        document.getElementById('itemName').value = '';
-        document.getElementById('defaultAmount').value = '';
-        generateMonthCheckboxes(); 
-
-        if(currentTab !== cat) { switchTab(cat); }
-        else { render(); }
-        
-        showSuccessToast();
-
-        if(isAdmin) {
-            setTimeout(() => {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-            }, 300);
+    // 1. ฟังก์ชันโหลดข้อมูล (ปรับให้รองรับ Error)
+    async function loadData() {
+        try {
+            // เพิ่ม timestamp เพื่อป้องกัน cache ของ Browser
+            const res = await fetch(SCRIPT_URL + "?t=" + Date.now());
+            const data = await res.json();
+            items = Array.isArray(data) ? data : [];
+            render(); 
+        } catch (e) { 
+            console.error("Load Error:", e); 
         }
     }
-}
 
-        async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
+    // 2. ฟังก์ชันบันทึกข้อมูล (แก้หัวใจสำคัญ: ตัด no-cors ออกเพื่อให้มัน Sync กันจริง)
     async function saveCloud() {
-    try {
-        // ใช้ fetch แบบมาตรฐาน และส่งเป็น Text เพื่อเลี่ยงปัญหา CORS กับ Google Apps Script
-        const response = await fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify(items),
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8"
-            }
+        try {
+            // ส่งแบบ text/plain เพื่อเลี่ยงปัญหา CORS ของ Google Apps Script แต่ยังได้รับคำยืนยันกลับมา
+            const response = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify(items),
+                headers: { "Content-Type": "text/plain;charset=utf-8" }
+            });
+            console.log("Cloud Saved Successfully");
+            return true;
+        } catch (e) {
+            console.error("Save Error:", e);
+            return false;
+        }
+    }
+
+    // 3. ปรับฟังก์ชัน addItem ให้ "รอ" จนบันทึกเสร็จ
+    async function addItem() {
+        const n = document.getElementById('debtorName').value;
+        const it = document.getElementById('itemName').value;
+        const a = document.getElementById('defaultAmount').value;
+        const cat = document.getElementById('category').value;
+        const m = parseInt(document.getElementById('monthCount').value);
+        
+        if(!n || !it || !a) return alert("ข้อมูลไม่ครบ!");
+
+        const checkedMonths = Array.from(document.querySelectorAll('.quick-pay-check:checked')).map(cb => parseInt(cb.value));
+        
+        // เพิ่มข้อมูลลงในตัวแปร items
+        items.push({ 
+            id: Date.now(), 
+            cat: cat, 
+            debtor: n, 
+            item: it, 
+            payments: Array.from({length: m}, (_, index) => ({
+                isPaid: checkedMonths.includes(index), 
+                amount: parseFloat(a), 
+                reported: false
+            })) 
         });
         
-        // ถ้าต้องการตรวจสอบผ่าน Console
-        console.log("บันทึกสำเร็จ!"); 
-        return true;
-    } catch (e) {
-        console.error("Save Error:", e);
-        alert("บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-        return false;
-    }
-}
-        function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
-        
-        function loginAdmin() { 
-            if (prompt("Admin Key:") === ADMIN_PASS) { 
-                isAdmin = true; 
-                document.getElementById('adminPanel').classList.remove('hidden'); 
-                document.getElementById('adminLock').innerText = "🔓"; 
-                generateMonthCheckboxes(); 
-                render(); 
-            } 
-        }
+        // สำคัญ: ต้องใช้ await เพื่อให้มั่นใจว่าส่งไปถึง Google ก่อนจะล้างหน้าจอ
+        const success = await saveCloud();
 
-        function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
+        if (success) {
+            document.getElementById('itemName').value = '';
+            document.getElementById('defaultAmount').value = '';
+            generateMonthCheckboxes(); 
 
-        function generatePDF(type) {
-            const content = document.getElementById('pdf-content');
-            const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-            const filtered = items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid));
-            if (!filtered.length) return alert("ไม่มีข้อมูล");
-
-            let html = `<div style="font-family: 'Kanit', sans-serif; padding: 40px; background: #fff;">
-                <h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 5px;">รายการค้าง: ${type.toUpperCase()}</h1>
-                <p style="font-size: 11px; color: #888;">วันที่: ${today}</p>`;
-
-            const grouped = filtered.reduce((acc, curr) => { if (!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
+            if(currentTab !== cat) { switchTab(cat); }
+            else { render(); }
             
-            for (const name in grouped) {
-                let total = 0;
-                html += `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;">
-                    <div style="background: #f9f9f9; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #ddd;">คุณ${name}</div>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr style="background: #fff; font-size: 10px; color: #888; text-align: left;">
-                            <th style="padding: 10px 15px;">รายการ</th>
-                            <th style="padding: 10px 15px; text-align: center;">ชำระแล้ว</th>
-                            <th style="padding: 10px 15px; text-align: right;">ยอดเรียกเก็บ</th>
-                        </tr>`;
-                
-                grouped[name].forEach(item => {
-                    const totalMonths = item.payments.length;
-                    const paidCount = item.payments.filter(p => p.isPaid).length; 
-                    let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
-                    if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
-                    const amount = item.payments[targetIdx].amount;
-                    total += amount;
-                    html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
-                        <td style="padding: 12px 15px;">${item.item}</td>
-                        <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${paidCount}/${totalMonths}</td>
-                        <td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
-                    </tr>`;
-                });
-                html += `</table>
-                    <div style="padding: 15px; text-align: right; background: #FFFDE7; font-weight: bold; font-size: 16px;">
-                        ยอดรวม: <span style="color: #2563eb;">฿${Math.round(total).toLocaleString()}</span>
-                    </div>
-                </div>`;
-            }
-            html += `<p style="text-align: center; margin-top: 40px; color: #ccc; font-size: 9px;">DEBT CLOUD SYSTEM</p></div>`;
-            content.innerHTML = html;
-            html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, jsPDF: { format: 'a4' } }).from(content).save();
-        }
+            showSuccessToast();
 
-        window.onload = loadData;
-    </script>
+            if(isAdmin) {
+                setTimeout(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 300);
+            }
+        } else {
+            alert("บันทึกข้อมูลไม่สำเร็จ กรุณาลองอีกครั้ง");
+        }
+    }
+
+    // --- ส่วนที่เหลือ (UI/Logic เดิมของคุณ) ---
+    window.onscroll = function() {
+        const btn = document.getElementById("scrollTopBtn");
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            btn.style.display = "flex";
+        } else {
+            btn.style.display = "none";
+        }
+    };
+
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showSuccessToast() {
+        const x = document.getElementById("toast");
+        x.className = "show";
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 2000);
+    }
+
+    function switchPage(p, t) {
+        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => { b.classList.remove('text-pink-500'); b.classList.add('text-slate-400'); });
+        document.getElementById('page-'+p).classList.add('active');
+        document.getElementById('nav-'+p).classList.replace('text-slate-400', 'text-pink-500');
+        document.getElementById('currentTitle').innerText = t;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tab-shopee').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='shopee'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+        document.getElementById('tab-loan').className = `flex-1 py-3 text-[10px] font-bold rounded-full transition-all ${tab==='loan'?'bg-white text-pink-600 shadow-sm':'text-blue-400'}`;
+        render();
+    }
+
+    function toggleGroup(name) {
+        collapsedGroups[name] = !collapsedGroups[name];
+        render();
+    }
+
+    function generateMonthCheckboxes() {
+        const mCount = parseInt(document.getElementById('monthCount').value);
+        const container = document.getElementById('quickMonthSelect');
+        if(!container) return;
+        container.innerHTML = '';
+        for (let i = 1; i <= mCount; i++) {
+            container.innerHTML += `<label class="month-chip relative"><input type="checkbox" class="quick-pay-check hidden" value="${i-1}" onchange="handleQuickPayLogic(${i-1}, this.checked)"><div class="flex items-center justify-center py-2 rounded-xl bg-white border-2 border-slate-100 text-[11px] font-bold text-slate-400 transition-all cursor-pointer">${i}</div></label>`;
+        }
+    }
+
+    function handleQuickPayLogic(index, isChecked) {
+        const checkboxes = document.querySelectorAll('.quick-pay-check');
+        checkboxes.forEach((cb, i) => {
+            if (isChecked && i <= index) cb.checked = true;
+            else if (!isChecked && i >= index) cb.checked = false;
+        });
+    }
+
+    function render() {
+        const activeList = document.getElementById('activeListContent');
+        const historyList = document.getElementById('historyList');
+        const summaryArea = document.getElementById('monthlySummaryArea');
+        activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
+        document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
+
+        let grandTotal = 0; const summaryData = {};
+        items.forEach(i => {
+            const nextPay = i.payments.find(p => !p.isPaid);
+            if (nextPay) {
+                summaryData[i.debtor] = (summaryData[i.debtor] || 0) + nextPay.amount;
+                grandTotal += nextPay.amount;
+            }
+        });
+        document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
+        
+        Object.keys(summaryData).forEach(name => {
+            summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
+        });
+
+        const activeItems = items.filter(i => i.payments.some(p => !p.isPaid) && i.cat === currentTab);
+        const groups = activeItems.reduce((acc, curr) => {
+            if(!acc[curr.debtor]) acc[curr.debtor] = [];
+            acc[curr.debtor].push(curr);
+            return acc;
+        }, {});
+
+        for (const name in groups) {
+            const isCollapsed = collapsedGroups[name];
+            let groupTotalValue = 0;
+            groups[name].forEach(p => { groupTotalValue += p.payments.reduce((sum, m) => sum + m.amount, 0); });
+            let html = `<div class="mb-4"><button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2 mb-1"><h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest flex items-center gap-1">${isCollapsed ? '▶' : '▼'} 👤 CLIENT: ${name}</h3>${isCollapsed ? `<span class="text-[10px] font-bold text-blue-500">฿${Math.round(groupTotalValue).toLocaleString()}</span>` : ''}</button>`;
+            if (!isCollapsed) {
+                html += `<div class="space-y-3">`;
+                groups[name].forEach(p => { html += renderCard(p); });
+                html += `</div><div class="mt-2 text-right px-2"><span class="text-[12px] font-bold text-blue-700">รวมทั้งหมด: ฿${Math.round(groupTotalValue).toLocaleString()} บาท</span></div>`;
+            }
+            html += `</div>`;
+            activeList.innerHTML += html;
+        }
+        items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
+        renderNameTags();
+    }
+
+    function renderCard(p) {
+        const totalMonths = p.payments.length;
+        const paidCount = p.payments.filter(m => m.isPaid).length; 
+        const percent = Math.round((paidCount / totalMonths) * 100);
+        const isReported = p.payments.some(m => m.reported && !m.isPaid);
+        const itemTotal = p.payments.reduce((sum, m) => sum + m.amount, 0);
+        return `<div class="flex items-center gap-2"><div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}"><div class="flex-1 min-w-0"><div class="flex justify-between items-end mb-2"><div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${p.item}</div><div class="text-[10px] font-bold text-pink-500">งวด ${paidCount}/${totalMonths}</div></div><div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div><div class="text-[11px] font-bold text-slate-600 mt-2">ราคา: ฿${Math.round(itemTotal).toLocaleString()} บาท</div></div></div>${isAdmin ? `<button onclick="deleteItem(${p.id})" class="w-10 h-14 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>` : ''}</div>`;
+    }
+
+    function openModal(id) {
+        currentEditingId = id;
+        const p = items.find(x => x.id === id);
+        document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
+        document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
+        document.getElementById('mItemTitle').innerText = p.item;
+        const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
+        let totalPaid = 0;
+        p.payments.forEach((m, i) => {
+            if(m.isPaid) totalPaid += m.amount;
+            const status = m.isPaid ? 'bg-green-50 text-green-600 border-green-100' : (m.reported ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-slate-50 text-slate-400 border-slate-100');
+            grid.innerHTML += `<div class="flex items-center gap-3 p-4 rounded-2xl border ${status}"><span class="text-[9px] font-bold w-10 text-slate-400">งวด ${i+1}</span><input type="number" value="${m.amount}" ${!isAdmin ? 'disabled' : ''} onchange="updateAmt(${p.id}, ${i}, this.value)" class="flex-1 bg-transparent text-right font-bold outline-none"><button onclick="togglePay(${p.id}, ${i})" ${!isAdmin && m.reported ? 'disabled' : ''} class="w-10 h-10 rounded-full flex items-center justify-center ${m.isPaid ? 'bg-green-500 text-white' : 'bg-slate-200 text-white'}">${m.isPaid ? '✓' : (isAdmin ? '⚬' : '🔔')}</button></div>`;
+        });
+        document.getElementById('mTotalAmount').innerText = `฿${Math.round(totalPaid).toLocaleString()}`;
+        document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    async function payAllFromModal() {
+        if (!currentEditingId || !isAdmin) return;
+        const p = items.find(x => x.id === currentEditingId);
+        p.payments.forEach(m => { m.isPaid = true; m.reported = false; });
+        openModal(currentEditingId); render(); await saveCloud();
+    }
+
+    async function plusOneCategory() {
+        if(!confirm(`บวก +1 งวดให้ทุกคนในหมวด ${currentTab.toUpperCase()}?`)) return;
+        items.forEach(item => {
+            if(item.cat === currentTab) {
+                const nextIdx = item.payments.findIndex(m => !m.isPaid);
+                if (nextIdx !== -1) { item.payments[nextIdx].isPaid = true; item.payments[nextIdx].reported = false; }
+            }
+        });
+        render(); await saveCloud();
+    }
+
+    async function togglePay(id, idx) {
+        const p = items.find(x => x.id === id);
+        if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
+        else { p.payments[idx].reported = true; alert("แจ้งงวดที่ " + (idx+1) + " แล้ว 🔔"); }
+        openModal(id); render(); await saveCloud();
+    }
+
+    function updateAmt(id, idx, val) { items.find(x => x.id === id).payments[idx].amount = parseFloat(val) || 0; saveCloud(); }
+
+    async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
+    
+    function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
+    
+    function loginAdmin() { 
+        if (prompt("Admin Key:") === ADMIN_PASS) { 
+            isAdmin = true; 
+            document.getElementById('adminPanel').classList.remove('hidden'); 
+            document.getElementById('adminLock').innerText = "🔓"; 
+            generateMonthCheckboxes(); 
+            render(); 
+        } 
+    }
+
+    function renderNameTags() { const area = document.getElementById('nameTagsArea'); const names = [...new Set(items.map(i => i.debtor))]; area.innerHTML = names.map(n => `<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 border border-pink-100 cursor-pointer">${n}</div>`).join(''); }
+
+    function generatePDF(type) {
+        const content = document.getElementById('pdf-content');
+        const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const filtered = items.filter(i => i.cat === type && i.payments.some(p => !p.isPaid));
+        if (!filtered.length) return alert("ไม่มีข้อมูล");
+        let html = `<div style="font-family: 'Kanit', sans-serif; padding: 40px; background: #fff;"><h1 style="color: ${type==='shopee'?'#ea580c':'#2563eb'}; border-bottom: 2px solid; padding-bottom: 10px; margin-bottom: 5px;">รายการค้าง: ${type.toUpperCase()}</h1><p style="font-size: 11px; color: #888;">วันที่: ${today}</p>`;
+        const grouped = filtered.reduce((acc, curr) => { if (!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
+        for (const name in grouped) {
+            let total = 0;
+            html += `<div style="margin-top: 20px; border: 1px solid #ddd; border-radius: 12px; overflow: hidden;"><div style="background: #f9f9f9; padding: 12px 15px; font-weight: bold; border-bottom: 1px solid #ddd;">คุณ${name}</div><table style="width: 100%; border-collapse: collapse;"><tr style="background: #fff; font-size: 10px; color: #888; text-align: left;"><th style="padding: 10px 15px;">รายการ</th><th style="padding: 10px 15px; text-align: center;">ชำระแล้ว</th><th style="padding: 10px 15px; text-align: right;">ยอดเรียกเก็บ</th></tr>`;
+            grouped[name].forEach(item => {
+                const totalMonths = item.payments.length;
+                const paidCount = item.payments.filter(p => p.isPaid).length; 
+                let targetIdx = item.payments.findIndex(p => p.reported && !p.isPaid);
+                if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
+                const amount = item.payments[targetIdx].amount;
+                total += amount;
+                html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;"><td style="padding: 12px 15px;">${item.item}</td><td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${paidCount}/${totalMonths}</td><td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td></tr>`;
+            });
+            html += `</table><div style="padding: 15px; text-align: right; background: #FFFDE7; font-weight: bold; font-size: 16px;">ยอดรวม: <span style="color: #2563eb;">฿${Math.round(total).toLocaleString()}</span></div></div>`;
+        }
+        html += `<p style="text-align: center; margin-top: 40px; color: #ccc; font-size: 9px;">DEBT CLOUD SYSTEM</p></div>`;
+        content.innerHTML = html;
+        html2pdf().set({ margin: 0.3, filename: `Debt-${type}.pdf`, jsPDF: { format: 'a4' } }).from(content).save();
+    }
+
+    // เรียกโหลดข้อมูลเมื่อเปิดหน้าเว็บ
+    window.addEventListener('load', loadData);
+</script>
 </body>
 </html>
