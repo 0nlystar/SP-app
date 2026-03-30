@@ -137,7 +137,7 @@
     <div id="pdf-container" class="hidden"><div id="pdf-content"></div></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4XxoeQ_G15t7NRktXyVrPvJWKh6tnj1AdSSSmBnWANrIFFDFO8lLRaYPzsthqtYU/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz72spTPx92Q-t_DqoqLXiIGOtnC7o5CTQUILiKGfU3P3y5uvMlNYhVxz83TWvEHIBq/exec"; 
     const ADMIN_PASS = "onlystar"; 
     let items = []; 
     let isAdmin = false; 
@@ -156,22 +156,16 @@
    async function saveCloud() {
     try {
         const dataString = JSON.stringify(items);
-        // ส่งข้อมูลผ่าน URL แทนการส่งใน Body (วิธีนี้มักจะผ่าน 100%)
-        const res = await fetch(`${SCRIPT_URL}?action=save`, { 
+        const res = await fetch(SCRIPT_URL + "?action=save", { 
             method: "POST", 
-            body: dataString, // ส่งก้อน JSON ไปตรงๆ
+            body: dataString,
             headers: { "Content-Type": "text/plain;charset=utf-8" }
         });
 
         const result = await res.text();
-        if (result.includes("Success")) {
-            showSuccessToast();
-            return true;
-        }
-        return false;
+        return result.includes("Success");
     } catch (e) {
         console.error("Save Error:", e);
-        // ถ้า fetch ปกติล้มเหลว ลองใช้ "Image Beacon" (วิธีสุดท้าย)
         return false;
     }
 }
