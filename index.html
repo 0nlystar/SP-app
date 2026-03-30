@@ -78,12 +78,10 @@
                             <option value="12" selected>12 เดือน</option>
                         </select>
                     </div>
-                    
                     <div class="bg-white/50 p-4 rounded-2xl mb-3">
                         <p class="text-[11px] font-bold text-slate-500 mb-3 ml-1">✓ เลือกงวดที่ชำระมาแล้ว</p>
                         <div id="quickMonthSelect" class="grid grid-cols-4 gap-2"></div>
                     </div>
-
                     <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
                     <button id="addBtn" onclick="addItem()" class="cta-btn w-full py-4">บันทึกรายการ</button>
                 </div>
@@ -194,7 +192,6 @@
             showSuccessToast();
             render();
             
-            // เลื่อนลงไปหาตัวที่เพิ่งเพิ่มแบบ Smooth
             setTimeout(() => {
                 const newEl = document.getElementById(`item-${newId}`);
                 if(newEl) {
@@ -250,29 +247,35 @@
         renderNameTags();
     }
 
+    // --- ส่วนที่แก้ไข: แสดงราคาตัวเต็ม และยอดต่องวด ---
     function renderCard(p) {
         const paid = p.payments.filter(m => m.isPaid).length; 
         const total = p.payments.length;
         const percent = (paid / total) * 100;
         const isReported = p.payments.some(m => m.reported && !m.isPaid);
-        // ดึงยอดเงินต่องวดมาแสดง (อ้างอิงงวดที่ยังไม่จ่าย หรือถ้างวดแรก)
-        const amount = p.payments[0]?.amount || 0;
+        
+        // คำนวณยอดเงิน
+        const perMonth = p.payments[0]?.amount || 0;
+        const fullTotal = p.payments.reduce((acc, curr) => acc + curr.amount, 0);
 
         return `
         <div id="item-${p.id}" class="flex items-center gap-2">
             <div onclick="openModal(${p.id})" class="debt-card flex-1 p-4 cursor-pointer ${isReported?'report-pending':''}">
-                <div class="flex justify-between mb-2">
-                    <span class="font-bold text-sm truncate">${isReported?'🔔 ':''}${p.item}</span>
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex-1">
+                        <div class="font-bold text-sm truncate w-40">${isReported?'🔔 ':''}${p.item}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">ราคาเต็ม: ฿${Math.round(fullTotal).toLocaleString()}</div>
+                    </div>
                     <div class="text-right">
-                        <span class="text-[10px] font-bold text-pink-500">${paid}/${total}</span>
-                        <div class="text-[11px] font-bold text-blue-600">฿${Math.round(amount).toLocaleString()}</div>
+                        <span class="text-[10px] font-bold text-pink-500">${paid}/${total} งวด</span>
+                        <div class="text-[12px] font-bold text-blue-600">฿${Math.round(perMonth).toLocaleString()}<span class="text-[9px] font-normal text-slate-400">/ด.</span></div>
                     </div>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width:${percent}%"></div>
                 </div>
             </div>
-            ${isAdmin?`<button onclick="deleteItem(${p.id})" class="w-10 h-16 bg-red-50 text-red-400 rounded-2xl">✕</button>`:''}
+            ${isAdmin?`<button onclick="deleteItem(${p.id})" class="w-10 h-16 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>`:''}
         </div>`;
     }
 
@@ -323,7 +326,6 @@
     function loginAdmin() { if(prompt("Pass:")===ADMIN_PASS) { isAdmin=true; document.getElementById('adminPanel').classList.remove('hidden'); render(); } }
     function renderNameTags() { const names = [...new Set(items.map(i=>i.debtor))]; document.getElementById('nameTagsArea').innerHTML = names.map(n=>`<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 cursor-pointer">${n}</div>`).join(''); }
     
-    // ระบบ Scroll To Top
     window.onscroll = function() {
         const btn = document.getElementById("scrollTopBtn");
         if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
@@ -334,7 +336,6 @@
     };
     function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 
-    // PDF Functions
     function generatePDF(type) {
         const container = document.getElementById('pdf-content');
         container.innerHTML = ''; 
