@@ -63,7 +63,6 @@
             transition: opacity 0.3s;
         }
 
-        /* NEW UX/UI Styles for Month Selection */
         .month-chip {
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             user-select: none;
@@ -127,8 +126,7 @@
                     
                     <div class="bg-white/50 p-4 rounded-2xl mb-3">
                         <p class="text-[11px] font-bold text-slate-500 mb-3 ml-1">✓ เลือกงวดที่ชำระมาแล้ว (จะเลือกย้อนหลังให้เอง)</p>
-                        <div id="quickMonthSelect" class="grid grid-cols-4 gap-2">
-                            </div>
+                        <div id="quickMonthSelect" class="grid grid-cols-4 gap-2"></div>
                     </div>
 
                     <input type="number" id="defaultAmount" placeholder="ยอดเงิน/งวด" class="w-full p-4 rounded-xl font-bold text-center border-none">
@@ -244,7 +242,6 @@
             render();
         }
 
-        // --- UPDATED UX/UI & LOGIC FOR MONTH SELECTION ---
         function generateMonthCheckboxes() {
             const mCount = parseInt(document.getElementById('monthCount').value);
             const container = document.getElementById('quickMonthSelect');
@@ -263,7 +260,6 @@
             }
         }
 
-        // New Logic: Check all previous months
         function handleQuickPayLogic(index, isChecked) {
             const checkboxes = document.querySelectorAll('.quick-pay-check');
             checkboxes.forEach((cb, i) => {
@@ -274,7 +270,6 @@
                 }
             });
         }
-        // -------------------------------------------------
 
         function render() {
             const activeList = document.getElementById('activeListContent');
@@ -336,12 +331,21 @@
             const isReported = p.payments.some(m => m.reported && !m.isPaid);
             const itemTotal = p.payments.reduce((sum, m) => sum + m.amount, 0);
 
+            // --- แก้ไขการแสดงชื่อรายการในส่วนของ Card ---
+            let displayItem = p.item;
+            if (p.cat === 'loan') {
+                const num = parseFloat(p.item);
+                if (!isNaN(num)) {
+                    displayItem = num.toLocaleString('th-TH') + " บาท";
+                }
+            }
+
             return `
                 <div class="flex items-center gap-2">
                     <div onclick="openModal(${p.id})" class="debt-card flex-1 flex items-center gap-4 p-4 cursor-pointer ${isReported ? 'report-pending' : ''}">
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-end mb-2">
-                                <div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${p.item}</div>
+                                <div class="font-bold text-sm text-slate-700 truncate uppercase">${isReported ? '🔔 ' : ''}${displayItem}</div>
                                 <div class="text-[10px] font-bold text-pink-500">งวด ${paidCount}/${totalMonths}</div>
                             </div>
                             <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%"></div></div>
@@ -357,7 +361,15 @@
             const p = items.find(x => x.id === id);
             document.getElementById('adminPayAllArea').classList.toggle('hidden', !isAdmin);
             document.getElementById('mDebtorSub').innerText = `Client: ${p.debtor}`;
-            document.getElementById('mItemTitle').innerText = p.item;
+            
+            // ปรับการแสดงผลชื่อหัวข้อใน Modal สำหรับหมวดเงินกู้ด้วย
+            let modalTitle = p.item;
+            if (p.cat === 'loan') {
+                const num = parseFloat(p.item);
+                if (!isNaN(num)) modalTitle = num.toLocaleString('th-TH') + " บาท";
+            }
+            document.getElementById('mItemTitle').innerText = modalTitle;
+
             const grid = document.getElementById('monthGrid'); grid.innerHTML = '';
             let totalPaid = 0;
             p.payments.forEach((m, i) => {
@@ -487,8 +499,18 @@
                     if (targetIdx === -1) targetIdx = item.payments.findIndex(p => !p.isPaid);
                     const amount = item.payments[targetIdx].amount;
                     total += amount;
+
+                    // --- แก้ไขการแสดงชื่อรายการในส่วนของ PDF ---
+                    let displayItemName = item.item;
+                    if (type === 'loan') {
+                        const num = parseFloat(item.item);
+                        if (!isNaN(num)) {
+                            displayItemName = num.toLocaleString('th-TH') + " บาท";
+                        }
+                    }
+
                     html += `<tr style="border-bottom: 1px solid #eee; font-size: 13px;">
-                        <td style="padding: 12px 15px;">${item.item}</td>
+                        <td style="padding: 12px 15px;">${displayItemName}</td>
                         <td style="padding: 12px 15px; text-align: center; font-weight: bold; color: #AD1457;">${paidCount}/${totalMonths}</td>
                         <td style="padding: 12px 15px; text-align: right; font-weight: bold;">฿${Math.round(amount).toLocaleString()}</td>
                     </tr>`;
