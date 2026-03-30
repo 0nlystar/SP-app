@@ -442,7 +442,20 @@
         }
 
         async function deleteItem(id) { if(confirm("ลบรายการนี้?")) { items = items.filter(x => x.id !== id); render(); await saveCloud(); } }
-        async function saveCloud() { try { await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(items) }); } catch (e) {} }
+       async function saveCloud() {
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(items),
+            headers: {
+                "Content-Type": "text/plain;charset=utf-8", // ใช้ text/plain เพื่อเลี่ยงปัญหา CORS เบื้องต้นของ GAS
+            }
+        });
+        console.log("Cloud Saved Status:", response.ok);
+    } catch (e) {
+        console.error("Save Error:", e);
+    }
+}
         function closeModal() { document.getElementById('detailModal').classList.add('hidden'); render(); }
         
         function loginAdmin() { 
