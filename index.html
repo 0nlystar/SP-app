@@ -291,64 +291,90 @@
     function loginAdmin() { if(prompt("Pass:")===ADMIN_PASS) { isAdmin=true; document.getElementById('adminPanel').classList.remove('hidden'); render(); } }
     function renderNameTags() { const names = [...new Set(items.map(i=>i.debtor))]; document.getElementById('nameTagsArea').innerHTML = names.map(n=>`<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 cursor-pointer">${n}</div>`).join(''); }
     // --- ฟังก์ชันระบบ PDF (ที่หายไป) ---
+    // --- ฟังก์ชันระบบ PDF แบบแยกการ์ดรายบุคคล ---
     function generatePDF(type) {
         const container = document.getElementById('pdf-content');
-        container.innerHTML = ''; // ล้างค่าเก่า
+        container.innerHTML = ''; // ล้างข้อมูลเก่า
         
         const filteredItems = items.filter(i => i.cat === type);
-        const title = type === 'shopee' ? 'รายงานยอดค้าง SHOPEE' : 'รายงานยอดค้างเงินกู้ (LOAN)';
+        const title = type === 'shopee' ? 'ยอดค้างชำระ SHOPEE' : 'ยอดค้างชำระเงินกู้ (LOAN)';
         
+        // สร้างโครงสร้างหน้า PDF
         let html = `
-            <div style="padding: 40px; font-family: 'Kanit', sans-serif;">
-                <h1 style="text-align: center; color: #AD1457; font-size: 24px;">${title}</h1>
-                <p style="text-align: center; color: #666;">วันที่ออกเอกสาร: ${new Date().toLocaleDateString('th-TH')}</p>
-                <hr style="border: 1px solid #FCE4EC; margin: 20px 0;">
-                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                    <thead>
-                        <tr style="background-color: #F8BBD0; color: white;">
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">ชื่อลูกค้า</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">รายการ</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">งวดที่จ่ายแล้ว</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: right;">ยอดต่อเดือน</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <div style="padding: 20px; background-color: #FFF0F3; min-height: 1000px; font-family: 'Kanit', sans-serif;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #AD1457; margin-bottom: 5px; font-size: 28px;">${title}</h1>
+                    <p style="color: #888; font-size: 14px;">ประจำวันที่: ${new Date().toLocaleDateString('th-TH')}</p>
+                </div>
         `;
 
-        filteredItems.forEach(i => {
-            const paidCount = i.payments.filter(p => p.isPaid).length;
-            const totalCount = i.payments.length;
-            const amount = i.payments[0]?.amount || 0;
+        // แยกข้อมูลตามชื่อคน (Group by Debtor)
+        const groups = filteredItems.reduce((acc, curr) => {
+            if(!acc[curr.debtor]) acc[curr.debtor] = [];
+            acc[curr.debtor].push(curr);
+            return acc;
+        }, {});
+
+        for (const name in groups) {
+            let personTotal = 0;
             
             html += `
-                <tr>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${i.debtor}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd;">${i.item}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${paidCount} / ${totalCount}</td>
-                    <td style="padding: 10px; border: 1px solid #ddd; text-align: right;">฿${Math.round(amount).toLocaleString()}</td>
-                </tr>
+                <div style="background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #F8BBD0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <div style="border-bottom: 2px solid #FCE4EC; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 18px; font-weight: bold; color: #37474F;">คุณ${name}</span>
+                        <span style="font-size: 12px; color: #AD1457; font-weight: bold; text-transform: uppercase;">Client Card</span>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
             `;
-        });
 
-        html += `
-                    </tbody>
-                </table>
-                <div style="margin-top: 30px; text-align: right; font-weight: bold; font-size: 18px; color: #AD1457;">
-                    ยอดรวมทั้งหมด: ฿${Math.round(filteredItems.reduce((acc, curr) => acc + (curr.payments.find(p => !p.isPaid)?.amount || 0), 0)).toLocaleString()}
+            groups[name].forEach(p => {
+                const paid = p.payments.filter(m => m.isPaid).length;
+                const total = p.payments.length;
+                const currentMonthAmount = p.payments.find(m => !m.isPaid)?.amount || 0;
+                personTotal += currentMonthAmount;
+
+                html += `
+                    <tr style="border-bottom: 1px dashed #eee;">
+                        <td style="padding: 12px 0; color: #555;">
+                            <div style="font-weight: bold; font-size: 14px;">${p.item}</div>
+                            <div style="font-size: 11px; color: #999;">สถานะ: จ่ายแล้ว ${paid}/${total} งวด</div>
+                        </td>
+                        <td style="padding: 12px 0; text-align: right; vertical-align: middle;">
+                            <div style="font-size: 16px; font-weight: bold; color: #AD1457;">฿${Math.round(currentMonthAmount).toLocaleString()}</div>
+                            <div style="font-size: 10px; color: #666;">(ยอดงวดนี้)</div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </table>
+                    <div style="margin-top: 15px; text-align: right; background: #FFF9F8; padding: 10px; border-radius: 12px;">
+                        <span style="font-size: 12px; color: #666;">รวมยอดที่ต้องเก็บ: </span>
+                        <span style="font-size: 20px; font-weight: bold; color: #AD1457;">฿${Math.round(personTotal).toLocaleString()}</span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
 
+        html += `</div>`;
         container.innerHTML = html;
 
+        // การตั้งค่าสำหรับ Mobile Download
         const opt = {
-            margin: 10,
-            filename: `DEBT-REPORT-${type.toUpperCase()}-${Date.now()}.pdf`,
+            margin: [10, 5, 10, 5],
+            filename: `Debt-Report-${type}-${Date.now()}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true,
+                scrollY: 0
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
+        // สั่งสร้างและดาวน์โหลด
         html2pdf().set(opt).from(container).save();
     }
     window.addEventListener('load', loadData);
