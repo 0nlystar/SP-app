@@ -9,18 +9,119 @@
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root { --bg-primary: #FFF0F3; --bg-secondary: #E3F2FD; --color-accent: #FFD54F; --text-dark: #37474F; }
-        body { font-family: 'Kanit', sans-serif; background-color: var(--bg-primary); color: var(--text-dark); scroll-behavior: smooth; }
+        
+        /* ปรับปรุงส่วนพื้นหลังท้องฟ้าและเมฆ */
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background: linear-gradient(to bottom, #FFF0F3 0%, #E3F2FD 100%) !important; 
+            color: var(--text-dark); 
+            scroll-behavior: smooth; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* เลเยอร์พื้นหลังเคลื่อนไหว */
+        .background-animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* ทำให้กดทะลุได้ */
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* สไตล์ก้อนเมฆ */
+        .cloud {
+            position: absolute;
+            background: rgba(131, 204, 233, 0.9);
+            border-radius: 50px;
+            filter: blur(8px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.03);
+            animation: moveClouds linear infinite;
+        }
+
+        .cloud::after, .cloud::before {
+            content: '';
+            position: absolute;
+            background: inherit;
+            border-radius: 50%;
+        }
+
+        @keyframes moveClouds {
+            from { left: -250px; }
+            to { left: 110%; }
+        }
+
+        /* กำหนดขนาดและตำแหน่งเมฆ 6 ก้อน กระจายทั่ว */
+        .cloud1 { width: 120px; height: 40px; top: 10%; animation-duration: 35s; transform: scale(0.7); opacity: 0.3; }
+        .cloud1::after { width: 50px; height: 50px; top: -25px; left: 15px; }
+        .cloud1::before { width: 40px; height: 40px; top: -15px; left: 45px; }
+
+        .cloud2 { width: 150px; height: 50px; top: 25%; animation-duration: 50s; animation-delay: -5s; transform: scale(1); opacity: 0.5; }
+        .cloud2::after { width: 70px; height: 70px; top: -35px; left: 20px; }
+        .cloud2::before { width: 50px; height: 50px; top: -20px; left: 65px; }
+
+        .cloud3 { width: 180px; height: 60px; top: 45%; animation-duration: 65s; animation-delay: -15s; transform: scale(1.3); opacity: 0.2; }
+        .cloud3::after { width: 80px; height: 80px; top: -40px; left: 25px; }
+        .cloud3::before { width: 60px; height: 60px; top: -25px; left: 80px; }
+
+        .cloud4 { width: 130px; height: 45px; top: 65%; animation-duration: 40s; animation-delay: -10s; transform: scale(0.9); opacity: 0.4; }
+        .cloud4::after { width: 60px; height: 60px; top: -30px; left: 18px; }
+        .cloud4::before { width: 45px; height: 45px; top: -18px; left: 55px; }
+
+        .cloud5 { width: 160px; height: 55px; top: 80%; animation-duration: 55s; animation-delay: -20s; transform: scale(1.1); opacity: 0.3; }
+        .cloud5::after { width: 75px; height: 75px; top: -38px; left: 22px; }
+        .cloud5::before { width: 55px; height: 55px; top: -22px; left: 70px; }
+
+        .cloud6 { width: 100px; height: 35px; top: 92%; animation-duration: 30s; animation-delay: -8s; transform: scale(0.6); opacity: 0.2; }
+        .cloud6::after { width: 45px; height: 45px; top: -22px; left: 12px; }
+        .cloud6::before { width: 35px; height: 35px; top: -12px; left: 40px; }
+
+        /* สไตล์ตัวการ์ตูน */
+        .character {
+            position: absolute;
+            font-size: 76px; /* ขนาดไม่ใหญ่มาก */
+            user-select: none;
+            z-index: 1; /* อยู่หน้าเมฆแต่อยู่หลังคอนเทนต์ */
+            opacity: 0.6; /* ดูโปร่งแสงเล็กน้อย */
+            animation: moveCharacter linear infinite, characterFloating 4s ease-in-out infinite;
+        }
+
+        @keyframes moveCharacter {
+            from { left: -100px; }
+            to { left: 110%; }
+        }
+
+        @keyframes characterFloating {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(8deg); }
+        }
+
+        /* กำหนดตำแหน่งและความเร็วตัวการ์ตูน 3 ตัว กระจายทั่ว */
+        .char1 { top: 18%; animation-duration: 22s; }
+        .char2 { top: 44%; animation-duration: 38s; animation-delay: -10s; font-size: 40px; }
+        .char3 { top: 70%; animation-duration: 28s; animation-delay: -5s; }
+
+        /* ทำให้คอนเทนต์หลักอยู่หน้าพื้นหลังเคลื่อนไหว */
+        header, main, nav, #detailModal, #loginModal {
+            position: relative;
+            z-index: 10;
+        }
+        /* จบส่วนที่ปรับปรุงพื้นหลัง */
+
         .page-section { display: none; }
         .page-section.active { display: block; animation: fadeIn 0.2s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .secondary-card { background-color: var(--bg-secondary); border: 2px solid #BBDEFB; border-radius: 24px; }
+        .secondary-card { background-color: rgba(227, 242, 253, 0.7); backdrop-filter: blur(5px); border: 2px solid #BBDEFB; border-radius: 24px; }
         .cta-btn { background-color: var(--color-accent); color: #5D4037; box-shadow: 0 4px 0px #FBC02D; transition: all 0.1s; border-radius: 16px; font-weight: bold; }
         .cta-btn:active { transform: translateY(2px); box-shadow: 0 2px 0px #FBC02D; }
-        .debt-card { background: white; border: 1px solid #F8BBD0; border-radius: 20px; transition: all 0.3s; }
+        .debt-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); border: 1px solid #F8BBD0; border-radius: 20px; transition: all 0.3s; }
         .report-pending { border: 2px solid #FFAB91 !important; background: #FFF9F8 !important; }
         .progress-bar { height: 8px; background: #F3E5F5; border-radius: 10px; overflow: hidden; width: 100%; }
         .progress-fill { height: 100%; background: var(--color-accent); transition: width 0.5s; }
-        .nav-bar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-top: 2px solid var(--bg-secondary); }
+        .nav-bar { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border-top: 2px solid var(--bg-secondary); }
         #toast { visibility: hidden; min-width: 200px; background-color: #AD1457; color: #fff; text-align: center; border-radius: 20px; padding: 16px; position: fixed; z-index: 100; left: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         #toast.show { visibility: visible; animation: fadeinout 2s forwards; }
         @keyframes fadeinout { 0% { opacity: 0; transform: translate(-50%, -40%); } 20% { opacity: 1; transform: translate(-50%, -50%); } 80% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -60%); } }
@@ -28,10 +129,20 @@
         .month-chip { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); user-select: none; }
         .month-chip input:checked + div { background-color: #ec4899; color: white; border-color: #ec4899; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3); transform: scale(1.05); }
         .new-item-highlight { animation: highlight 2s ease-out; }
-        @keyframes highlight { 0% { background-color: #FFF9C4; } 100% { background-color: white; } }
+        @keyframes highlight { 0% { background-color: #FFF9C4; } 100% { background-color: transparent; } }
     </style>
 </head>
 <body class="min-h-screen pb-28">
+
+    <div class="background-animation-container">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+        <div class="cloud cloud4"></div>
+        <div class="cloud cloud5"></div>
+        <div class="cloud cloud6"></div>
+        
+        <div class="character char1">😺</div> <div class="character char2">🐼</div> <div class="character char3">🧸</div> </div>
 
     <div id="toast">บันทึกข้อมูลสำเร็จ ✨</div>
 
@@ -39,7 +150,7 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"></path></svg>
     </button>
 
-    <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
+    <header class="sticky top-0 bg-white/70 backdrop-blur-md z-40 p-5 flex justify-between items-center border-b-2 border-[#FCE4EC]">
         <div class="flex items-center gap-2">
             <div class="w-9 h-9 bg-[#F8BBD0] rounded-full flex items-center justify-center text-white font-bold">D</div>
             <h1 class="font-bold text-xl text-[#AD1457]" id="currentTitle">สรุปยอด</h1>
@@ -51,9 +162,9 @@
         </div>
     </header>
 
-    <main class="max-w-md mx-auto p-5">
+    <main class="max-w-md mx-auto p-5 relative z-10">
         <section id="page-home" class="page-section active">
-            <div class="secondary-card p-8 text-center mb-8">
+            <div class="secondary-card p-8 text-center mb-8 bg-white/60 backdrop-blur-sm">
                 <p class="text-blue-600 text-xs font-bold uppercase tracking-widest mb-1">ยอดรวมที่ต้องเก็บ (เดือนนี้)</p>
                 <div id="totalMonthlyAmount" class="text-5xl font-bold text-blue-800">฿0</div>
             </div>
@@ -61,7 +172,7 @@
         </section>
 
         <section id="page-active" class="page-section">
-            <div id="adminPanel" class="hidden mb-6 secondary-card p-6">
+            <div id="adminPanel" class="hidden mb-6 secondary-card p-6 bg-white/60 backdrop-blur-sm">
                 <div id="nameTagsArea" class="flex flex-wrap gap-1.5 mb-4"></div>
                 <div class="space-y-3">
                     <input type="text" id="debtorName" placeholder="ชื่อคนกู้" class="w-full p-4 rounded-xl border-none outline-none">
@@ -87,22 +198,22 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 mb-6">
-                <div class="flex flex-1 bg-white/50 p-1 rounded-full border border-pink-200">
+            <div class="flex items-center gap-2 mb-6 relative z-10">
+                <div class="flex flex-1 bg-white/50 p-1 rounded-full border border-pink-200 backdrop-blur-md">
                     <button onclick="switchTab('shopee')" id="tab-shopee" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all bg-white shadow-sm text-pink-600">SHOPEE</button>
                     <button onclick="switchTab('loan')" id="tab-loan" class="flex-1 py-3 text-[10px] font-bold rounded-full transition-all text-blue-400">LOAN</button>
                 </div>
                 <button id="globalPlusBtn" onclick="plusOneCategory()" class="hidden w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full shadow-lg font-bold text-xl">+</button>
             </div>
-            <div id="activeListContent" class="space-y-4"></div>
+            <div id="activeListContent" class="space-y-4 relative z-10"></div>
         </section>
 
-        <section id="page-history" class="page-section">
+        <section id="page-history" class="page-section relative z-10">
             <div id="historyList" class="space-y-3 opacity-60"></div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 w-full h-20 nav-bar flex items-center px-4 z-50">
+    <nav class="fixed bottom-0 left-0 w-full h-20 nav-bar flex items-center px-4 z- nav-bar z-50">
         <button onclick="switchPage('home', 'สรุปยอด')" class="flex-1 flex flex-col items-center text-pink-500" id="nav-home">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
             <span class="text-[10px] font-bold mt-1">HOME</span>
@@ -118,7 +229,7 @@
     </nav>
 
     <div id="detailModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end justify-center z-[60]">
-        <div class="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl">
+        <div class="bg-white rounded-t-[3rem] w-full max-w-md p-8 shadow-2xl relative z-10">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
             <div id="mDebtorSub" class="text-blue-500 font-bold text-xs"></div>
             <h3 id="mItemTitle" class="text-2xl font-bold text-slate-800 mb-6 border-b pb-4"></h3>
@@ -126,11 +237,24 @@
                 <button onclick="payAllFromModal()" class="w-full py-2 bg-green-500 text-white rounded-xl font-bold text-xs shadow-sm">✓ จ่ายทุกงวด</button>
             </div>
             <div id="monthGrid" class="space-y-2 max-h-[40vh] overflow-y-auto pr-2"></div>
-            <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none">
+            <div class="mt-6 flex justify-between items-center p-5 secondary-card border-none bg-blue-50">
                 <span class="font-bold text-xs text-blue-700 uppercase">Paid Total</span>
                 <span id="mTotalAmount" class="text-2xl font-bold text-blue-800">฿0</span>
             </div>
             <button onclick="closeModal()" class="cta-btn w-full mt-4 py-4">Close</button>
+        </div>
+    </div>
+
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-6 text-center">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-xs p-8 shadow-2xl border border-pink-100 relative z-10">
+            <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🔐</div>
+            <h3 class="text-xl font-bold text-slate-800 mb-1">Admin Access</h3>
+            <p class="text-xs text-slate-400 mb-6">กรุณากรอกรหัสผ่าน</p>
+            <input type="password" id="adminPassInput" class="w-full p-4 rounded-2xl bg-slate-50 border-2 border-slate-50 focus:border-pink-300 outline-none text-center font-bold text-xl mb-4 tracking-widest" placeholder="••••">
+            <div class="flex gap-2">
+                <button onclick="closeLoginModal()" class="flex-1 py-3 text-slate-400 font-bold text-sm">ปิด</button>
+                <button onclick="checkAdminLogin()" class="flex-[2] cta-btn py-3 text-sm">ตกลง</button>
+            </div>
         </div>
     </div>
 
@@ -143,26 +267,19 @@
     let isAdmin = false; 
     let currentTab = 'shopee';
     let collapsedGroups = {}; 
-
-   let isDataLoaded = false; // ตัวล็อคเริ่มต้นเป็น false
+    let isDataLoaded = false;
 
 async function loadData() {
     try {
-        // เพิ่ม t=Date.now() เพื่อป้องกัน Browser จำค่าเก่า (Cache)
         const res = await fetch(`${SCRIPT_URL}?t=${Date.now()}`);
         const data = await res.json();
-        
-        console.log("Raw data from cloud:", data); 
-
-        // ตรวจสอบว่าข้อมูลที่ได้มาเป็น Array หรือไม่
         if (data && Array.isArray(data)) {
             items = data;
         } else {
-            items = []; // ถ้าไม่ใช่ Array ให้เป็นค่าว่างไว้ก่อน เพื่อไม่ให้ระบบพัง
+            items = [];
             console.warn("Data is not an array or is empty");
         }
-        
-        isDataLoaded = true; // ปลดล็อคให้ระบบเริ่มทำงาน
+        isDataLoaded = true;
         render(); 
     } catch (e) { 
         console.error("Load Error:", e);
@@ -170,12 +287,7 @@ async function loadData() {
     }
 }
 async function saveCloud() {
-    // กฎเหล็ก: ถ้ายังโหลดไม่เสร็จ หรือ items ดันว่างเปล่า (ทั้งที่มีข้อมูลควรจะมี) ให้หยุดทำงาน
-    if (!isDataLoaded) {
-        console.warn("Save blocked: Data not fully loaded yet.");
-        return false;
-    }
-
+    if (!isDataLoaded) return false;
     try {
         const dataString = JSON.stringify(items);
         const res = await fetch(SCRIPT_URL + "?action=save", { 
@@ -217,7 +329,6 @@ async function saveCloud() {
             generateMonthCheckboxes(); 
             showSuccessToast();
             render();
-            
             setTimeout(() => {
                 const newEl = document.getElementById(`item-${newId}`);
                 if(newEl) {
@@ -225,22 +336,18 @@ async function saveCloud() {
                     newEl.classList.add('new-item-highlight');
                 }
             }, 300);
-
         } else { alert("Error: ข้อมูลไม่เข้า Sheet!"); }
-        
         addBtn.disabled = false; addBtn.innerText = "บันทึกรายการ";
     }
+
 function render() {
     if (!isDataLoaded) return;
-
     const activeList = document.getElementById('activeListContent');
     const historyList = document.getElementById('historyList');
     const summaryArea = document.getElementById('monthlySummaryArea');
     activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
-    
     document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
 
-    // --- 1. หน้า HOME: สรุปยอด "ที่ต้องเก็บเดือนนี้" (เหมือนเดิม) ---
     let grandTotal = 0;
     const summaryData = {};
     items.forEach(i => {
@@ -252,10 +359,9 @@ function render() {
     });
     document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
     for(let name in summaryData) {
-        summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
+        summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400 relative z-10"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
     }
 
-    // --- 2. หน้า LIST: แบ่งกลุ่มคน และสรุป "ราคาเต็มรวมทุกชิ้น" ---
     const groups = items.filter(i => i.cat === currentTab && i.payments.some(p => !p.isPaid)).reduce((acc, curr) => {
         if(!acc[curr.debtor]) acc[curr.debtor] = []; 
         acc[curr.debtor].push(curr); 
@@ -264,68 +370,35 @@ function render() {
 
     for (const name in groups) {
         const isCollapsed = collapsedGroups[name];
-        
-        // --- ส่วนที่แก้: คำนวณ "ราคาเต็มของสินค้าทุกชิ้น" ที่คนนี้ถืออยู่ ---
         let totalFullPriceForPerson = 0; 
         groups[name].forEach(product => {
-            // รวมยอดเงินทุกงวดของสินค้าชิ้นนั้น (เงินต้นเต็ม)
             const itemFullPrice = product.payments.reduce((sum, pay) => sum + pay.amount, 0);
             totalFullPriceForPerson += itemFullPrice;
         });
 
-        let html = `<div class="mb-4"><button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2"><h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">${isCollapsed?'▶':'▼'} ${name}</h3></button>`;
-        
+        let html = `<div class="mb-4 relative z-10"><button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2"><h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">${isCollapsed?'▶':'▼'} ${name}</h3></button>`;
         if (!isCollapsed) {
-            // รายรายการสินค้า (ยังแสดงงวดผ่อนปกติ)
             html += `<div class="space-y-3">${groups[name].map(p => renderCard(p)).join('')}</div>`;
-            
-            // --- สรุปยอด "ราคาเต็มรวม" วางไว้ล่างสุดของชื่อคนนั้น ---
-            html += `
-                <div class="mt-2 bg-blue-50/50 p-3 rounded-xl border border-dashed border-blue-200">
-                    <div class="flex justify-between items-center">
-                        <span class="text-[10px] font-bold text-blue-400 uppercase">มูลค่าสินค้ารวมทั้งหมด</span>
-                        <span class="font-bold text-blue-700 text-sm">฿${Math.round(totalFullPriceForPerson).toLocaleString()}</span>
-                    </div>
-                </div>`;
+            html += `<div class="mt-2 bg-blue-50/70 p-3 rounded-xl border border-dashed border-blue-200 backdrop-blur-sm"><div class="flex justify-between items-center"><span class="text-[10px] font-bold text-blue-400 uppercase">มูลค่าสินค้ารวมทั้งหมด</span><span class="font-bold text-blue-700 text-sm">฿${Math.round(totalFullPriceForPerson).toLocaleString()}</span></div></div>`;
         }
         activeList.innerHTML += html + `</div>`;
     }
-    
     items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
     renderNameTags();
 }
-    // --- ส่วนคำนวณยอด Home และ List (ใช้ Code เดิมที่คุณมีได้เลย) ---
-    // ... (ส่วนที่เหลือของ render() เหมือนเดิมที่ผมเคยแก้ให้) ...
-    // --- ส่วนที่แก้ไข: แสดงราคาตัวเต็ม และยอดต่องวด ---
+
     function renderCard(p) {
         const paid = p.payments.filter(m => m.isPaid).length; 
         const total = p.payments.length;
         const percent = (paid / total) * 100;
         const isReported = p.payments.some(m => m.reported && !m.isPaid);
-        
-        // คำนวณยอดเงิน
         const perMonth = p.payments[0]?.amount || 0;
         const fullTotal = p.payments.reduce((acc, curr) => acc + curr.amount, 0);
-
-        return `
-        <div id="item-${p.id}" class="flex items-center gap-2">
-            <div onclick="openModal(${p.id})" class="debt-card flex-1 p-4 cursor-pointer ${isReported?'report-pending':''}">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex-1">
-                        <div class="font-bold text-sm truncate w-40">${isReported?'🔔 ':''}${p.item}</div>
-                        <div class="text-[10px] text-slate-400 mt-1">ราคาเต็ม: ฿${Math.round(fullTotal).toLocaleString()}</div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] font-bold text-pink-500">${paid}/${total} งวด</span>
-                        <div class="text-[12px] font-bold text-blue-600">฿${Math.round(perMonth).toLocaleString()}<span class="text-[9px] font-normal text-slate-400">/ด.</span></div>
-                    </div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:${percent}%"></div>
-                </div>
-            </div>
-            ${isAdmin?`<button onclick="deleteItem(${p.id})" class="w-10 h-16 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>`:''}
-        </div>`;
+        return `<div id="item-${p.id}" class="flex items-center gap-2 relative z-10"><div onclick="openModal(${p.id})" class="debt-card flex-1 p-4 cursor-pointer ${isReported?'report-pending':''}">
+                <div class="flex justify-between items-start mb-2"><div class="flex-1"><div class="font-bold text-sm truncate w-40">${isReported?'🔔 ':''}${p.item}</div><div class="text-[10px] text-slate-400 mt-1">ราคาเต็ม: ฿${Math.round(fullTotal).toLocaleString()}</div></div>
+                <div class="text-right"><span class="text-[10px] font-bold text-pink-500">${paid}/${total} งวด</span><div class="text-[12px] font-bold text-blue-600">฿${Math.round(perMonth).toLocaleString()}<span class="text-[9px] font-normal text-slate-400">/ด.</span></div></div></div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div></div>
+                ${isAdmin?`<button onclick="deleteItem(${p.id})" class="w-10 h-16 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>`:''}</div>`;
     }
 
     async function togglePay(id, idx) {
@@ -371,32 +444,55 @@ function render() {
     function switchTab(t) { currentTab = t; render(); }
     function toggleGroup(n) { collapsedGroups[n] = !collapsedGroups[n]; render(); }
     function closeModal() { document.getElementById('detailModal').classList.add('hidden'); }
+    
+    // ส่วนที่แก้ไข: Admin Login ระบบใหม่
+    function loginAdmin() {
+        if(isAdmin) {
+            if(confirm("ออกจากระบบแอดมิน?")) {
+                isAdmin = false;
+                document.getElementById('adminPanel').classList.add('hidden');
+                document.getElementById('adminLock').innerText = "🔒";
+                document.getElementById('adminLock').classList.replace('text-pink-500', 'text-slate-400');
+                render();
+            }
+            return;
+        }
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('adminPassInput').value = '';
+        setTimeout(() => document.getElementById('adminPassInput').focus(), 100);
+    }
+    function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); }
+    function checkAdminLogin() {
+        const p = document.getElementById('adminPassInput').value;
+        if(p === ADMIN_PASS) {
+            isAdmin = true;
+            document.getElementById('adminPanel').classList.remove('hidden');
+            document.getElementById('adminLock').innerText = "🔓";
+            document.getElementById('adminLock').classList.replace('text-slate-400', 'text-pink-500');
+            closeLoginModal();
+            render();
+        } else {
+            alert("รหัสผ่านไม่ถูกต้อง");
+            document.getElementById('adminPassInput').value = '';
+        }
+    }
+    document.getElementById('adminPassInput').addEventListener('keypress', (e) => { if(e.key === 'Enter') checkAdminLogin(); });
+
     function showSuccessToast() { const x = document.getElementById("toast"); x.className = "show"; setTimeout(()=>x.className="", 2000); }
-    function loginAdmin() { if(prompt("Pass:")===ADMIN_PASS) { isAdmin=true; document.getElementById('adminPanel').classList.remove('hidden'); render(); } }
     function renderNameTags() { const names = [...new Set(items.map(i=>i.debtor))]; document.getElementById('nameTagsArea').innerHTML = names.map(n=>`<div onclick="document.getElementById('debtorName').value='${n}'" class="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-pink-500 cursor-pointer">${n}</div>`).join(''); }
     
     window.onscroll = function() {
         const btn = document.getElementById("scrollTopBtn");
-        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-            btn.style.display = "flex";
-        } else {
-            btn.style.display = "none";
-        }
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) { btn.style.display = "flex"; } else { btn.style.display = "none"; }
     };
     function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
 function payAllFromModal() {
     const title = document.getElementById('mItemTitle').innerText;
     const debtor = document.getElementById('mDebtorSub').innerText.replace('Client: ', '');
     const item = items.find(x => x.item === title && x.debtor === debtor);
-    
     if (item && confirm('ยืนยันการจ่ายครบทุกงวด?')) {
-        item.payments.forEach(p => {
-            p.isPaid = true;
-            p.reported = false;
-        });
-        saveCloud();
-        render();
-        closeModal();
+        item.payments.forEach(p => { p.isPaid = true; p.reported = false; });
+        saveCloud(); render(); closeModal();
     }
 }
     function generatePDF(type) {
@@ -404,63 +500,24 @@ function payAllFromModal() {
         container.innerHTML = ''; 
         const filteredItems = items.filter(i => i.cat === type);
         const title = type === 'shopee' ? 'ยอดค้างชำระ SHOPEE' : 'ยอดค้างชำระเงินกู้ (LOAN)';
-        
-        let html = `<div style="padding: 15mm; background-color: #FFF0F3; min-height: 297mm; font-family: 'Kanit', sans-serif;">
-            <div style="text-align: center; margin-bottom: 25px;">
-                <h1 style="color: #AD1457; margin: 0; font-size: 26px;">${title}</h1>
-                <p style="color: #888; font-size: 13px; margin-top: 5px;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p>
-            </div>`;
-
-        const groups = filteredItems.reduce((acc, curr) => {
-            if(!acc[curr.debtor]) acc[curr.debtor] = [];
-            acc[curr.debtor].push(curr);
-            return acc;
-        }, {});
-
+        let html = `<div style="padding: 15mm; background-color: #FFF0F3; min-height: 297mm; font-family: 'Kanit', sans-serif;"><div style="text-align: center; margin-bottom: 25px;"><h1 style="color: #AD1457; margin: 0; font-size: 26px;">${title}</h1><p style="color: #888; font-size: 13px; margin-top: 5px;">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p></div>`;
+        const groups = filteredItems.reduce((acc, curr) => { if(!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc; }, {});
         for (const name in groups) {
             let personTotal = 0;
-            html += `<div style="background: white; border-radius: 18px; padding: 20px; margin-bottom: 20px; border: 1px solid #F8BBD0; page-break-inside: avoid;">
-                <div style="border-bottom: 2px solid #FCE4EC; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between;">
-                    <span style="font-size: 17px; font-weight: bold;">คุณ${name}</span>
-                </div>
-                <table style="width: 100%; border-collapse: collapse;">`;
-
+            html += `<div style="background: white; border-radius: 18px; padding: 20px; margin-bottom: 20px; border: 1px solid #F8BBD0; page-break-inside: avoid;"><div style="border-bottom: 2px solid #FCE4EC; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between;"><span style="font-size: 17px; font-weight: bold;">คุณ${name}</span></div><table style="width: 100%; border-collapse: collapse;">`;
             groups[name].forEach(p => {
                 const paid = p.payments.filter(m => m.isPaid).length;
                 const total = p.payments.length;
                 const currentMonthAmount = p.payments.find(m => !m.isPaid)?.amount || 0;
                 personTotal += currentMonthAmount;
-                html += `<tr style="border-bottom: 1px solid #F9F9F9;">
-                    <td style="padding: 10px 0;">
-                        <div style="font-weight: bold; font-size: 14px;">${p.item}</div>
-                        <div style="font-size: 11px; color: #999;">ชำระแล้ว ${paid}/${total} งวด</div>
-                    </td>
-                    <td style="padding: 10px 0; text-align: right;">
-                        <div style="font-size: 15px; font-weight: bold; color: #AD1457;">฿${Math.round(currentMonthAmount).toLocaleString()}</div>
-                    </td>
-                </tr>`;
+                html += `<tr style="border-bottom: 1px solid #F9F9F9;"><td style="padding: 10px 0;"><div style="font-weight: bold; font-size: 14px;">${p.item}</div><div style="font-size: 11px; color: #999;">ชำระแล้ว ${paid}/${total} งวด</div></td><td style="padding: 10px 0; text-align: right;"><div style="font-size: 15px; font-weight: bold; color: #AD1457;">฿${Math.round(currentMonthAmount).toLocaleString()}</div></td></tr>`;
             });
-
-            html += `</table>
-                <div style="margin-top: 15px; text-align: right; background: #FFF9F8; padding: 12px; border-radius: 12px; border: 1px dashed #F8BBD0;">
-                    <span style="font-size: 12px; color: #666;">ยอดรวมงวดนี้: </span>
-                    <span style="font-size: 18px; font-weight: bold; color: #AD1457;">฿${Math.round(personTotal).toLocaleString()}</span>
-                </div>
-            </div>`;
+            html += `</table><div style="margin-top: 15px; text-align: right; background: #FFF9F8; padding: 12px; border-radius: 12px; border: 1px dashed #F8BBD0;"><span style="font-size: 12px; color: #666;">ยอดรวมงวดนี้: </span><span style="font-size: 18px; font-weight: bold; color: #AD1457;">฿${Math.round(personTotal).toLocaleString()}</span></div></div>`;
         }
         html += `</div>`;
         container.innerHTML = html;
-
-        html2pdf().set({
-            margin: 0,
-            filename: `Report-${type}-${Date.now()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        }).from(container).save();
+        html2pdf().set({ margin: 0, filename: `Report-${type}-${Date.now()}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } }).from(container).save();
     }
-
     window.addEventListener('load', loadData);
 </script>
 </body>
