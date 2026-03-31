@@ -137,7 +137,7 @@
     <div id="pdf-container" class="hidden"><div id="pdf-content"></div></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4XxoeQ_G15t7NRktXyVrPvJWKh6tnj1AdSSSmBnWANrIFFDFO8lLRaYPzsthqtYU/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGIIRZDoQ0DyVYf2_ty9rVWnqAE0GUTWetVO_pV6f_Fvjvd-l6a1imd-N0KHr3UYqu/exec"; 
     const ADMIN_PASS = "onlystar"; 
     let items = []; 
     let isAdmin = false; 
@@ -148,27 +148,27 @@
 
 async function loadData() {
     try {
+        // เพิ่ม t=Date.now() เพื่อป้องกัน Browser จำค่าเก่า (Cache)
         const res = await fetch(`${SCRIPT_URL}?t=${Date.now()}`);
         const data = await res.json();
         
-        // ตรวจสอบข้อมูลที่ได้จาก Cloud
-        console.log("Raw data from cloud:", data); // ดูใน Console ว่าข้อมูลมาไหม
-        
+        console.log("Raw data from cloud:", data); 
+
+        // ตรวจสอบว่าข้อมูลที่ได้มาเป็น Array หรือไม่
         if (data && Array.isArray(data)) {
             items = data;
         } else {
-            items = [];
+            items = []; // ถ้าไม่ใช่ Array ให้เป็นค่าว่างไว้ก่อน เพื่อไม่ให้ระบบพัง
             console.warn("Data is not an array or is empty");
         }
         
-        isDataLoaded = true; 
+        isDataLoaded = true; // ปลดล็อคให้ระบบเริ่มทำงาน
         render(); 
     } catch (e) { 
         console.error("Load Error:", e);
-        alert("โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชใหม่");
+        alert("โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจอใหม่");
     }
 }
-
 async function saveCloud() {
     // กฎเหล็ก: ถ้ายังโหลดไม่เสร็จ หรือ items ดันว่างเปล่า (ทั้งที่มีข้อมูลควรจะมี) ให้หยุดทำงาน
     if (!isDataLoaded) {
@@ -231,62 +231,76 @@ async function saveCloud() {
         addBtn.disabled = false; addBtn.innerText = "บันทึกรายการ";
     }
 function render() {
-    // ลบเงื่อนไข if (!isDataLoaded && items.length === 0) return; ออกไปเลย
-    
+    // ถ้ายังโหลดไม่เสร็จ ไม่ต้องทำอะไรต่อ
+    if (!isDataLoaded) return;
+
     const activeList = document.getElementById('activeListContent');
     const historyList = document.getElementById('historyList');
     const summaryArea = document.getElementById('monthlySummaryArea');
     
-    // ล้างหน้าจอก่อนเรนเดอร์ใหม่
     activeList.innerHTML = ''; 
     historyList.innerHTML = ''; 
     summaryArea.innerHTML = '';
     
-    if (!isDataLoaded) {
-        activeList.innerHTML = '<p class="text-center text-slate-400 py-10">กำลังดึงข้อมูลจาก Cloud...</p>';
-        return;
-    }
-
-    if (items.length === 0) {
-        activeList.innerHTML = '<p class="text-center text-slate-400 py-10">ไม่มีรายการค้างชำระ</p>';
-    }
-
     document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
-}
-    // --- ส่วนคำนวณยอด Home และ List (ใช้ Code เดิมที่คุณมีได้เลย) ---
-    // ... (ส่วนที่เหลือของ render() เหมือนเดิมที่ผมเคยแก้ให้) ...
-    // --- ส่วนที่แก้ไข: แสดงราคาตัวเต็ม และยอดต่องวด ---
-    function renderCard(p) {
-        const paid = p.payments.filter(m => m.isPaid).length; 
-        const total = p.payments.length;
-        const percent = (paid / total) * 100;
-        const isReported = p.payments.some(m => m.reported && !m.isPaid);
-        
-        // คำนวณยอดเงิน
-        const perMonth = p.payments[0]?.amount || 0;
-        const fullTotal = p.payments.reduce((acc, curr) => acc + curr.amount, 0);
 
-        return `
-        <div id="item-${p.id}" class="flex items-center gap-2">
-            <div onclick="openModal(${p.id})" class="debt-card flex-1 p-4 cursor-pointer ${isReported?'report-pending':''}">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex-1">
-                        <div class="font-bold text-sm truncate w-40">${isReported?'🔔 ':''}${p.item}</div>
-                        <div class="text-[10px] text-slate-400 mt-1">ราคาเต็ม: ฿${Math.round(fullTotal).toLocaleString()}</div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] font-bold text-pink-500">${paid}/${total} งวด</span>
-                        <div class="text-[12px] font-bold text-blue-600">฿${Math.round(perMonth).toLocaleString()}<span class="text-[9px] font-normal text-slate-400">/ด.</span></div>
-                    </div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width:${percent}%"></div>
-                </div>
-            </div>
-            ${isAdmin?`<button onclick="deleteItem(${p.id})" class="w-10 h-16 bg-red-50 text-red-400 rounded-2xl flex items-center justify-center">✕</button>`:''}
-        </div>`;
+    // --- ส่วนที่ 1: หน้า Home (ยอดรวมที่ต้องเก็บเดือนนี้) ---
+    let grandTotal = 0;
+    const summaryData = {};
+    items.forEach(i => {
+        const nextPay = i.payments.find(p => !p.isPaid);
+        if (nextPay) {
+            summaryData[i.debtor] = (summaryData[i.debtor] || 0) + nextPay.amount;
+            grandTotal += nextPay.amount;
+        }
+    });
+    document.getElementById('totalMonthlyAmount').innerText = `฿${Math.round(grandTotal).toLocaleString()}`;
+    
+    for(let name in summaryData) {
+        summaryArea.innerHTML += `
+            <div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400">
+                <span class="font-bold text-slate-700">คุณ${name}</span>
+                <span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span>
+            </div>`;
     }
 
+    // --- ส่วนที่ 2: หน้า List (ยอดรวมราคาเต็มรายคน) ---
+    const groups = items.filter(i => i.cat === currentTab && i.payments.some(p => !p.isPaid)).reduce((acc, curr) => {
+        if(!acc[curr.debtor]) acc[curr.debtor] = []; 
+        acc[curr.debtor].push(curr); 
+        return acc;
+    }, {});
+
+    for (const name in groups) {
+        const isCollapsed = collapsedGroups[name];
+        
+        // คำนวณ "ราคาเต็มรวม" ของสินค้าทุกชิ้นที่คนนี้ยังผ่อนอยู่
+        let gFullTotal = 0; 
+        groups[name].forEach(p => {
+            const itemFullPrice = p.payments.reduce((sum, m) => sum + m.amount, 0);
+            gFullTotal += itemFullPrice;
+        });
+
+        let html = `
+            <div class="mb-4">
+                <button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2">
+                    <h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">
+                        ${isCollapsed ? '▶' : '▼'} ${name}
+                    </h3>
+                </button>`;
+        
+        if (!isCollapsed) {
+            html += `<div class="space-y-3">${groups[name].map(p => renderCard(p)).join('')}</div>`;
+            // แสดงราคาเต็มรวมท้ายชื่อกลุ่มในหน้า List
+            html += `<div class="mt-2 text-right px-2 font-bold text-blue-700 text-[12px]">ราคาสินค้าเต็มรวม (${name}): ฿${Math.round(gFullTotal).toLocaleString()}</div>`;
+        }
+        activeList.innerHTML += html + `</div>`;
+    }
+    
+    // ประวัติที่จ่ายจบแล้ว
+    items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
+    renderNameTags();
+}
     async function togglePay(id, idx) {
         const p = items.find(x => x.id === id);
         if (isAdmin) { p.payments[idx].isPaid = !p.payments[idx].isPaid; p.payments[idx].reported = false; }
