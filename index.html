@@ -137,7 +137,7 @@
     <div id="pdf-container" class="hidden"><div id="pdf-content"></div></div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz72spTPx92Q-t_DqoqLXiIGOtnC7o5CTQUILiKGfU3P3y5uvMlNYhVxz83TWvEHIBq/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4XxoeQ_G15t7NRktXyVrPvJWKh6tnj1AdSSSmBnWANrIFFDFO8lLRaYPzsthqtYU/exec"; 
     const ADMIN_PASS = "onlystar"; 
     let items = []; 
     let isAdmin = false; 
@@ -210,14 +210,16 @@
         addBtn.disabled = false; addBtn.innerText = "บันทึกรายการ";
     }
 
-    function render() {
+   function render() {
         const activeList = document.getElementById('activeListContent');
         const historyList = document.getElementById('historyList');
         const summaryArea = document.getElementById('monthlySummaryArea');
         activeList.innerHTML = ''; historyList.innerHTML = ''; summaryArea.innerHTML = '';
         document.getElementById('globalPlusBtn').style.display = isAdmin ? 'flex' : 'none';
 
-        let grandTotal = 0; const summaryData = {};
+        // --- 1. หน้า Home: ยอดรวมที่ต้องเก็บ "เฉพาะเดือนนี้" (คงเดิม) ---
+        let grandTotal = 0; 
+        const summaryData = {};
         items.forEach(i => {
             const nextPay = i.payments.find(p => !p.isPaid);
             if (nextPay) {
@@ -231,27 +233,33 @@
             summaryArea.innerHTML += `<div class="debt-card p-5 flex justify-between items-center border-l-4 border-l-blue-400"><span class="font-bold text-slate-700">คุณ${name}</span><span class="font-bold text-blue-600 text-lg">฿${Math.round(summaryData[name]).toLocaleString()}</span></div>`;
         }
 
+        // --- 2. หน้า List: คำนวณกลุ่มรายการ ---
         const groups = items.filter(i => i.cat === currentTab && i.payments.some(p => !p.isPaid)).reduce((acc, curr) => {
             if(!acc[curr.debtor]) acc[curr.debtor] = []; acc[curr.debtor].push(curr); return acc;
         }, {});
 
         for (const name in groups) {
             const isCollapsed = collapsedGroups[name];
-            let gTotal = 0; groups[name].forEach(p => {
-                const currentMonthAmount = p.payments.find(m => !m.isPaid)?.amount || 0;
-                gTotal += currentMonthAmount;
+            
+            // --- แก้ไขจุดนี้: คำนวณจาก "ราคาสินค้าเต็ม" ของทุกชิ้นที่ยังผ่อนไม่จบ ---
+            let gFullTotal = 0; 
+            groups[name].forEach(p => {
+                const itemFullPrice = p.payments.reduce((sum, m) => sum + m.amount, 0);
+                gFullTotal += itemFullPrice;
             });
+
             let html = `<div class="mb-4"><button onclick="toggleGroup('${name}')" class="w-full flex justify-between items-center p-2"><h3 class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">${isCollapsed?'▶':'▼'} ${name}</h3></button>`;
             if (!isCollapsed) {
                 html += `<div class="space-y-3">${groups[name].map(p => renderCard(p)).join('')}</div>`;
-                html += `<div class="mt-2 text-right px-2 font-bold text-blue-700 text-[12px]">รวมของ ${name}: ฿${Math.round(gTotal).toLocaleString()}</div>`;
+                // แสดงผลราคาสินค้าเต็มรวมของคนนั้น
+                html += `<div class="mt-2 text-right px-2 font-bold text-blue-700 text-[12px]">ราคาสินค้าเต็มรวม (${name}): ฿${Math.round(gFullTotal).toLocaleString()}</div>`;
             }
             activeList.innerHTML += html + `</div>`;
         }
+        
         items.filter(i => i.payments.every(p => p.isPaid)).forEach(p => historyList.innerHTML += renderCard(p));
         renderNameTags();
     }
-
     // --- ส่วนที่แก้ไข: แสดงราคาตัวเต็ม และยอดต่องวด ---
     function renderCard(p) {
         const paid = p.payments.filter(m => m.isPaid).length; 
@@ -340,7 +348,21 @@
         }
     };
     function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
-
+function payAllFromModal() {
+    const title = document.getElementById('mItemTitle').innerText;
+    const debtor = document.getElementById('mDebtorSub').innerText.replace('Client: ', '');
+    const item = items.find(x => x.item === title && x.debtor === debtor);
+    
+    if (item && confirm('ยืนยันการจ่ายครบทุกงวด?')) {
+        item.payments.forEach(p => {
+            p.isPaid = true;
+            p.reported = false;
+        });
+        saveCloud();
+        render();
+        closeModal();
+    }
+}
     function generatePDF(type) {
         const container = document.getElementById('pdf-content');
         container.innerHTML = ''; 
